@@ -23,11 +23,35 @@ Partial Class frmMain
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmMain))
-        Me.TabControl1 = New System.Windows.Forms.TabControl
+        Me.tabcontrolOpenFiles = New System.Windows.Forms.TabControl
         Me.statusStrip = New System.Windows.Forms.StatusStrip
         Me.toolStrip = New System.Windows.Forms.ToolStrip
-        Me.ToolStripButton1 = New System.Windows.Forms.ToolStripButton
+        Me.toolstripNew = New System.Windows.Forms.ToolStripButton
+        Me.toolstripOpen = New System.Windows.Forms.ToolStripButton
+        Me.toolstripSave = New System.Windows.Forms.ToolStripButton
+        Me.toolstripSaveAll = New System.Windows.Forms.ToolStripButton
+        Me.ToolStripSeparator1 = New System.Windows.Forms.ToolStripSeparator
+        Me.toolstripCut = New System.Windows.Forms.ToolStripButton
+        Me.toolstripCopy = New System.Windows.Forms.ToolStripButton
+        Me.toolstripPaste = New System.Windows.Forms.ToolStripButton
+        Me.ToolStripSeparator2 = New System.Windows.Forms.ToolStripSeparator
+        Me.toolstripUndo = New System.Windows.Forms.ToolStripButton
+        Me.toolstripRedo = New System.Windows.Forms.ToolStripButton
+        Me.ToolStripSeparator3 = New System.Windows.Forms.ToolStripSeparator
+        Me.toolstripFind = New System.Windows.Forms.ToolStripButton
+        Me.toolstripReplace = New System.Windows.Forms.ToolStripButton
+        Me.ToolStripSeparator4 = New System.Windows.Forms.ToolStripSeparator
+        Me.toolstripFont = New System.Windows.Forms.ToolStripButton
         Me.menuStrip = New System.Windows.Forms.MenuStrip
+        Me.FileToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.EditToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.BuildToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.CompileToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.CompileAndRunToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.OptionsToolStripMenuItem1 = New System.Windows.Forms.ToolStripMenuItem
+        Me.OptionsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.ChangeFontToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.AssociatepwnFilesToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.HelpToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.AboutToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.TabControl2 = New System.Windows.Forms.TabControl
@@ -42,16 +66,16 @@ Partial Class frmMain
         Me.TabControl3.SuspendLayout()
         Me.SuspendLayout()
         '
-        'TabControl1
+        'tabcontrolOpenFiles
         '
-        Me.TabControl1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+        Me.tabcontrolOpenFiles.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
                     Or System.Windows.Forms.AnchorStyles.Left) _
                     Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.TabControl1.Location = New System.Drawing.Point(12, 52)
-        Me.TabControl1.Name = "TabControl1"
-        Me.TabControl1.SelectedIndex = 0
-        Me.TabControl1.Size = New System.Drawing.Size(551, 330)
-        Me.TabControl1.TabIndex = 0
+        Me.tabcontrolOpenFiles.Location = New System.Drawing.Point(12, 52)
+        Me.tabcontrolOpenFiles.Name = "tabcontrolOpenFiles"
+        Me.tabcontrolOpenFiles.SelectedIndex = 0
+        Me.tabcontrolOpenFiles.Size = New System.Drawing.Size(551, 330)
+        Me.tabcontrolOpenFiles.TabIndex = 0
         '
         'statusStrip
         '
@@ -63,30 +87,217 @@ Partial Class frmMain
         '
         'toolStrip
         '
-        Me.toolStrip.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripButton1})
+        Me.toolStrip.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.toolstripNew, Me.toolstripOpen, Me.toolstripSave, Me.toolstripSaveAll, Me.ToolStripSeparator1, Me.toolstripCut, Me.toolstripCopy, Me.toolstripPaste, Me.ToolStripSeparator2, Me.toolstripUndo, Me.toolstripRedo, Me.ToolStripSeparator3, Me.toolstripFind, Me.toolstripReplace, Me.ToolStripSeparator4, Me.toolstripFont})
         Me.toolStrip.Location = New System.Drawing.Point(0, 24)
         Me.toolStrip.Name = "toolStrip"
         Me.toolStrip.Size = New System.Drawing.Size(730, 25)
         Me.toolStrip.TabIndex = 2
         Me.toolStrip.Text = "ToolStrip1"
         '
-        'ToolStripButton1
+        'toolstripNew
         '
-        Me.ToolStripButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
-        Me.ToolStripButton1.Image = CType(resources.GetObject("ToolStripButton1.Image"), System.Drawing.Image)
-        Me.ToolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta
-        Me.ToolStripButton1.Name = "ToolStripButton1"
-        Me.ToolStripButton1.Size = New System.Drawing.Size(23, 22)
-        Me.ToolStripButton1.Text = "ToolStripButton1"
+        Me.toolstripNew.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
+        Me.toolstripNew.Image = CType(resources.GetObject("toolstripNew.Image"), System.Drawing.Image)
+        Me.toolstripNew.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.toolstripNew.Name = "toolstripNew"
+        Me.toolstripNew.Size = New System.Drawing.Size(23, 22)
+        Me.toolstripNew.Text = "ToolStripButton5"
+        Me.toolstripNew.ToolTipText = "New File"
+        '
+        'toolstripOpen
+        '
+        Me.toolstripOpen.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
+        Me.toolstripOpen.Image = CType(resources.GetObject("toolstripOpen.Image"), System.Drawing.Image)
+        Me.toolstripOpen.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.toolstripOpen.Name = "toolstripOpen"
+        Me.toolstripOpen.Size = New System.Drawing.Size(23, 22)
+        Me.toolstripOpen.Text = "ToolStripButton1"
+        Me.toolstripOpen.ToolTipText = "Open File"
+        '
+        'toolstripSave
+        '
+        Me.toolstripSave.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
+        Me.toolstripSave.Image = CType(resources.GetObject("toolstripSave.Image"), System.Drawing.Image)
+        Me.toolstripSave.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.toolstripSave.Name = "toolstripSave"
+        Me.toolstripSave.Size = New System.Drawing.Size(23, 22)
+        Me.toolstripSave.Text = "ToolStripButton2"
+        Me.toolstripSave.ToolTipText = "Save Current File"
+        '
+        'toolstripSaveAll
+        '
+        Me.toolstripSaveAll.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
+        Me.toolstripSaveAll.Image = CType(resources.GetObject("toolstripSaveAll.Image"), System.Drawing.Image)
+        Me.toolstripSaveAll.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.toolstripSaveAll.Name = "toolstripSaveAll"
+        Me.toolstripSaveAll.Size = New System.Drawing.Size(23, 22)
+        Me.toolstripSaveAll.Text = "ToolStripButton9"
+        Me.toolstripSaveAll.ToolTipText = "Save All"
+        '
+        'ToolStripSeparator1
+        '
+        Me.ToolStripSeparator1.Name = "ToolStripSeparator1"
+        Me.ToolStripSeparator1.Size = New System.Drawing.Size(6, 25)
+        '
+        'toolstripCut
+        '
+        Me.toolstripCut.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
+        Me.toolstripCut.Image = CType(resources.GetObject("toolstripCut.Image"), System.Drawing.Image)
+        Me.toolstripCut.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.toolstripCut.Name = "toolstripCut"
+        Me.toolstripCut.Size = New System.Drawing.Size(23, 22)
+        Me.toolstripCut.Text = "ToolStripButton12"
+        Me.toolstripCut.ToolTipText = "Cut"
+        '
+        'toolstripCopy
+        '
+        Me.toolstripCopy.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
+        Me.toolstripCopy.Image = CType(resources.GetObject("toolstripCopy.Image"), System.Drawing.Image)
+        Me.toolstripCopy.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.toolstripCopy.Name = "toolstripCopy"
+        Me.toolstripCopy.Size = New System.Drawing.Size(23, 22)
+        Me.toolstripCopy.Text = "ToolStripButton4"
+        Me.toolstripCopy.ToolTipText = "Copy"
+        '
+        'toolstripPaste
+        '
+        Me.toolstripPaste.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
+        Me.toolstripPaste.Image = CType(resources.GetObject("toolstripPaste.Image"), System.Drawing.Image)
+        Me.toolstripPaste.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.toolstripPaste.Name = "toolstripPaste"
+        Me.toolstripPaste.Size = New System.Drawing.Size(23, 22)
+        Me.toolstripPaste.Text = "ToolStripButton3"
+        Me.toolstripPaste.ToolTipText = "Paste"
+        '
+        'ToolStripSeparator2
+        '
+        Me.ToolStripSeparator2.Name = "ToolStripSeparator2"
+        Me.ToolStripSeparator2.Size = New System.Drawing.Size(6, 25)
+        '
+        'toolstripUndo
+        '
+        Me.toolstripUndo.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
+        Me.toolstripUndo.Image = CType(resources.GetObject("toolstripUndo.Image"), System.Drawing.Image)
+        Me.toolstripUndo.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.toolstripUndo.Name = "toolstripUndo"
+        Me.toolstripUndo.Size = New System.Drawing.Size(23, 22)
+        Me.toolstripUndo.Text = "ToolStripButton6"
+        Me.toolstripUndo.ToolTipText = "Undo"
+        '
+        'toolstripRedo
+        '
+        Me.toolstripRedo.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
+        Me.toolstripRedo.Image = CType(resources.GetObject("toolstripRedo.Image"), System.Drawing.Image)
+        Me.toolstripRedo.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.toolstripRedo.Name = "toolstripRedo"
+        Me.toolstripRedo.Size = New System.Drawing.Size(23, 22)
+        Me.toolstripRedo.Text = "ToolStripButton7"
+        Me.toolstripRedo.ToolTipText = "Redo"
+        '
+        'ToolStripSeparator3
+        '
+        Me.ToolStripSeparator3.Name = "ToolStripSeparator3"
+        Me.ToolStripSeparator3.Size = New System.Drawing.Size(6, 25)
+        '
+        'toolstripFind
+        '
+        Me.toolstripFind.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
+        Me.toolstripFind.Image = CType(resources.GetObject("toolstripFind.Image"), System.Drawing.Image)
+        Me.toolstripFind.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.toolstripFind.Name = "toolstripFind"
+        Me.toolstripFind.Size = New System.Drawing.Size(23, 22)
+        Me.toolstripFind.Text = "ToolStripButton8"
+        Me.toolstripFind.ToolTipText = "Find"
+        '
+        'toolstripReplace
+        '
+        Me.toolstripReplace.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
+        Me.toolstripReplace.Image = CType(resources.GetObject("toolstripReplace.Image"), System.Drawing.Image)
+        Me.toolstripReplace.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.toolstripReplace.Name = "toolstripReplace"
+        Me.toolstripReplace.Size = New System.Drawing.Size(23, 22)
+        Me.toolstripReplace.Text = "ToolStripButton11"
+        Me.toolstripReplace.ToolTipText = "Find & Replace"
+        '
+        'ToolStripSeparator4
+        '
+        Me.ToolStripSeparator4.Name = "ToolStripSeparator4"
+        Me.ToolStripSeparator4.Size = New System.Drawing.Size(6, 25)
+        '
+        'toolstripFont
+        '
+        Me.toolstripFont.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
+        Me.toolstripFont.Image = CType(resources.GetObject("toolstripFont.Image"), System.Drawing.Image)
+        Me.toolstripFont.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.toolstripFont.Name = "toolstripFont"
+        Me.toolstripFont.Size = New System.Drawing.Size(23, 22)
+        Me.toolstripFont.Text = "ToolStripButton10"
+        Me.toolstripFont.ToolTipText = "Change Font"
         '
         'menuStrip
         '
-        Me.menuStrip.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.HelpToolStripMenuItem})
+        Me.menuStrip.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileToolStripMenuItem, Me.EditToolStripMenuItem, Me.BuildToolStripMenuItem, Me.OptionsToolStripMenuItem, Me.HelpToolStripMenuItem})
         Me.menuStrip.Location = New System.Drawing.Point(0, 0)
         Me.menuStrip.Name = "menuStrip"
         Me.menuStrip.Size = New System.Drawing.Size(730, 24)
         Me.menuStrip.TabIndex = 3
         Me.menuStrip.Text = "MenuStrip"
+        '
+        'FileToolStripMenuItem
+        '
+        Me.FileToolStripMenuItem.Name = "FileToolStripMenuItem"
+        Me.FileToolStripMenuItem.Size = New System.Drawing.Size(37, 20)
+        Me.FileToolStripMenuItem.Text = "File"
+        '
+        'EditToolStripMenuItem
+        '
+        Me.EditToolStripMenuItem.Name = "EditToolStripMenuItem"
+        Me.EditToolStripMenuItem.Size = New System.Drawing.Size(39, 20)
+        Me.EditToolStripMenuItem.Text = "Edit"
+        '
+        'BuildToolStripMenuItem
+        '
+        Me.BuildToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.CompileToolStripMenuItem, Me.CompileAndRunToolStripMenuItem, Me.OptionsToolStripMenuItem1})
+        Me.BuildToolStripMenuItem.Name = "BuildToolStripMenuItem"
+        Me.BuildToolStripMenuItem.Size = New System.Drawing.Size(46, 20)
+        Me.BuildToolStripMenuItem.Text = "Build"
+        '
+        'CompileToolStripMenuItem
+        '
+        Me.CompileToolStripMenuItem.Name = "CompileToolStripMenuItem"
+        Me.CompileToolStripMenuItem.Size = New System.Drawing.Size(166, 22)
+        Me.CompileToolStripMenuItem.Text = "Compile"
+        '
+        'CompileAndRunToolStripMenuItem
+        '
+        Me.CompileAndRunToolStripMenuItem.Name = "CompileAndRunToolStripMenuItem"
+        Me.CompileAndRunToolStripMenuItem.Size = New System.Drawing.Size(166, 22)
+        Me.CompileAndRunToolStripMenuItem.Text = "Compile and Run"
+        '
+        'OptionsToolStripMenuItem1
+        '
+        Me.OptionsToolStripMenuItem1.Name = "OptionsToolStripMenuItem1"
+        Me.OptionsToolStripMenuItem1.Size = New System.Drawing.Size(166, 22)
+        Me.OptionsToolStripMenuItem1.Text = "Options"
+        '
+        'OptionsToolStripMenuItem
+        '
+        Me.OptionsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ChangeFontToolStripMenuItem, Me.AssociatepwnFilesToolStripMenuItem})
+        Me.OptionsToolStripMenuItem.Name = "OptionsToolStripMenuItem"
+        Me.OptionsToolStripMenuItem.Size = New System.Drawing.Size(61, 20)
+        Me.OptionsToolStripMenuItem.Text = "Options"
+        '
+        'ChangeFontToolStripMenuItem
+        '
+        Me.ChangeFontToolStripMenuItem.Name = "ChangeFontToolStripMenuItem"
+        Me.ChangeFontToolStripMenuItem.Size = New System.Drawing.Size(198, 22)
+        Me.ChangeFontToolStripMenuItem.Text = "Change Font"
+        '
+        'AssociatepwnFilesToolStripMenuItem
+        '
+        Me.AssociatepwnFilesToolStripMenuItem.Name = "AssociatepwnFilesToolStripMenuItem"
+        Me.AssociatepwnFilesToolStripMenuItem.Size = New System.Drawing.Size(198, 22)
+        Me.AssociatepwnFilesToolStripMenuItem.Text = "Register .pwn Extension"
         '
         'HelpToolStripMenuItem
         '
@@ -98,7 +309,7 @@ Partial Class frmMain
         'AboutToolStripMenuItem
         '
         Me.AboutToolStripMenuItem.Name = "AboutToolStripMenuItem"
-        Me.AboutToolStripMenuItem.Size = New System.Drawing.Size(107, 22)
+        Me.AboutToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
         Me.AboutToolStripMenuItem.Text = "About"
         '
         'TabControl2
@@ -128,7 +339,7 @@ Partial Class frmMain
         Me.tabCurrFile.Location = New System.Drawing.Point(4, 22)
         Me.tabCurrFile.Name = "tabCurrFile"
         Me.tabCurrFile.Padding = New System.Windows.Forms.Padding(3)
-        Me.tabCurrFile.Size = New System.Drawing.Size(150, 237)
+        Me.tabCurrFile.Size = New System.Drawing.Size(150, 461)
         Me.tabCurrFile.TabIndex = 1
         Me.tabCurrFile.Text = "Current File"
         Me.tabCurrFile.UseVisualStyleBackColor = True
@@ -152,7 +363,7 @@ Partial Class frmMain
         Me.tabErrors.Padding = New System.Windows.Forms.Padding(3)
         Me.tabErrors.Size = New System.Drawing.Size(543, 125)
         Me.tabErrors.TabIndex = 0
-        Me.tabErrors.Text = "TabPage1"
+        Me.tabErrors.Text = "Error Output"
         Me.tabErrors.UseVisualStyleBackColor = True
         '
         'tabOutput
@@ -162,7 +373,7 @@ Partial Class frmMain
         Me.tabOutput.Padding = New System.Windows.Forms.Padding(3)
         Me.tabOutput.Size = New System.Drawing.Size(543, 125)
         Me.tabOutput.TabIndex = 1
-        Me.tabOutput.Text = "TabPage2"
+        Me.tabOutput.Text = "Misc Output"
         Me.tabOutput.UseVisualStyleBackColor = True
         '
         'frmMain
@@ -175,7 +386,7 @@ Partial Class frmMain
         Me.Controls.Add(Me.toolStrip)
         Me.Controls.Add(Me.statusStrip)
         Me.Controls.Add(Me.menuStrip)
-        Me.Controls.Add(Me.TabControl1)
+        Me.Controls.Add(Me.tabcontrolOpenFiles)
         Me.MainMenuStrip = Me.menuStrip
         Me.Name = "frmMain"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
@@ -190,10 +401,9 @@ Partial Class frmMain
         Me.PerformLayout()
 
     End Sub
-    Friend WithEvents TabControl1 As System.Windows.Forms.TabControl
+    Friend WithEvents tabcontrolOpenFiles As System.Windows.Forms.TabControl
     Friend WithEvents statusStrip As System.Windows.Forms.StatusStrip
     Friend WithEvents toolStrip As System.Windows.Forms.ToolStrip
-    Friend WithEvents ToolStripButton1 As System.Windows.Forms.ToolStripButton
     Friend WithEvents menuStrip As System.Windows.Forms.MenuStrip
     Friend WithEvents HelpToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents AboutToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
@@ -203,5 +413,30 @@ Partial Class frmMain
     Friend WithEvents TabControl3 As System.Windows.Forms.TabControl
     Friend WithEvents tabErrors As System.Windows.Forms.TabPage
     Friend WithEvents tabOutput As System.Windows.Forms.TabPage
+    Friend WithEvents toolstripSave As System.Windows.Forms.ToolStripButton
+    Friend WithEvents toolstripCopy As System.Windows.Forms.ToolStripButton
+    Friend WithEvents toolstripPaste As System.Windows.Forms.ToolStripButton
+    Friend WithEvents toolstripNew As System.Windows.Forms.ToolStripButton
+    Friend WithEvents toolstripOpen As System.Windows.Forms.ToolStripButton
+    Friend WithEvents toolstripSaveAll As System.Windows.Forms.ToolStripButton
+    Friend WithEvents ToolStripSeparator1 As System.Windows.Forms.ToolStripSeparator
+    Friend WithEvents toolstripFind As System.Windows.Forms.ToolStripButton
+    Friend WithEvents ToolStripSeparator2 As System.Windows.Forms.ToolStripSeparator
+    Friend WithEvents toolstripUndo As System.Windows.Forms.ToolStripButton
+    Friend WithEvents toolstripRedo As System.Windows.Forms.ToolStripButton
+    Friend WithEvents ToolStripSeparator3 As System.Windows.Forms.ToolStripSeparator
+    Friend WithEvents toolstripFont As System.Windows.Forms.ToolStripButton
+    Friend WithEvents toolstripCut As System.Windows.Forms.ToolStripButton
+    Friend WithEvents toolstripReplace As System.Windows.Forms.ToolStripButton
+    Friend WithEvents ToolStripSeparator4 As System.Windows.Forms.ToolStripSeparator
+    Friend WithEvents FileToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents EditToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents OptionsToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents BuildToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents CompileToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents CompileAndRunToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents OptionsToolStripMenuItem1 As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents ChangeFontToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents AssociatepwnFilesToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
 
 End Class
