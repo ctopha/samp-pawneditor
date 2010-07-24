@@ -30,9 +30,9 @@ Partial Class frmAbout
         Me.Label1.AutoSize = True
         Me.Label1.Location = New System.Drawing.Point(0, 0)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(213, 13)
+        Me.Label1.Size = New System.Drawing.Size(213, 26)
         Me.Label1.TabIndex = 0
-        Me.Label1.Text = "http://www.famfamfam.com/lab/icons/silk/"
+        Me.Label1.Text = "http://www.famfamfam.com/lab/icons/silk/" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "chesssetpieces.com"
         '
         'frmAbout
         '
