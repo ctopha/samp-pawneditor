@@ -45,44 +45,48 @@ Module Module1
 
 #Region "Scintilla Initialization stuff"
         Public Function InitSC(ByVal InitialText As String) As ScintillaNet.Scintilla
-            Dim sc As New ScintillaNet.Scintilla()
-            sc.ConfigurationManager.CustomLocation = "cpp.xml"
-            sc.ConfigurationManager.Language = "cpp"
-            sc.Dock = System.Windows.Forms.DockStyle.Fill
-            sc.Font = My.Settings.font
-            sc.Indentation.ShowGuides = True
-            sc.Indentation.SmartIndentType = ScintillaNet.SmartIndent.CPP2
-            sc.Indentation.TabWidth = 5
-            sc.IsBraceMatching = True
-            sc.Lexing.Lexer = ScintillaNet.Lexer.Cpp
-            sc.Lexing.SetKeywords(1, lst.ToString())
-            sc.Lexing.LexerName = "cpp"
-            sc.Lexing.LineCommentPrefix = ""
-            sc.Lexing.StreamCommentPrefix = ""
-            sc.Lexing.StreamCommentSufix = ""
-            sc.Location = New System.Drawing.Point(0, 0)
-            sc.Margins.Margin0.Width = 30
-            sc.Margins.Margin2.Width = 15
-            sc.Text = InitialText
-            sc.Scrolling.HorizontalWidth = 480
-            sc.Size = New System.Drawing.Size(624, 371)
-            sc.Styles.BraceBad.FontName = "Verdana"
-            sc.Styles.BraceLight.FontName = "Verdana"
-            sc.Styles.ControlChar.FontName = "Verdana"
-            sc.Styles.[Default].FontName = "Verdana"
-            sc.Styles.IndentGuide.FontName = "Verdana"
-            sc.Styles.LastPredefined.FontName = "Verdana"
-            sc.Styles.LineNumber.FontName = "Verdana"
-            sc.Styles.Max.FontName = "Verdana"
-            sc.Lexing.SetKeywords(1, String.Join(" ", lite.ToArray()))
-            lst.Sort()
-            sc.AutoComplete.List.AddRange(lst)
-            sc.AutoComplete.RegisterImages(ico)
-            sc.AutoComplete.AutomaticLengthEntered = True
-            sc.AutoComplete.DropRestOfWord = True
-            sc.AutoComplete.AutoHide = False
-            sc.Indicators(0).Color = Color.Red
-            Return sc
+            Dim scintilla As New ScintillaNet.Scintilla()
+
+            With scintilla
+                .ConfigurationManager.CustomLocation = "cpp.xml"
+                .ConfigurationManager.Language = "cpp"
+                .Dock = System.Windows.Forms.DockStyle.Fill
+                .Font = My.Settings.font
+                .Indentation.ShowGuides = True
+                .Indentation.SmartIndentType = ScintillaNet.SmartIndent.CPP2
+                .Indentation.TabWidth = 5
+                .IsBraceMatching = True
+                .Lexing.Lexer = ScintillaNet.Lexer.Cpp
+                .Lexing.SetKeywords(1, lst.ToString())
+                .Lexing.LexerName = "cpp"
+                .Lexing.LineCommentPrefix = ""
+                .Lexing.StreamCommentPrefix = ""
+                .Lexing.StreamCommentSufix = ""
+                .Location = New System.Drawing.Point(0, 0)
+                .Margins.Margin0.Width = 30
+                .Margins.Margin2.Width = 15
+                .Text = InitialText
+                .Scrolling.HorizontalWidth = 480
+                .Size = New System.Drawing.Size(624, 371)
+                .Styles.BraceBad.FontName = "Verdana"
+                .Styles.BraceLight.FontName = "Verdana"
+                .Styles.ControlChar.FontName = "Verdana"
+                .Styles.[Default].FontName = "Verdana"
+                .Styles.IndentGuide.FontName = "Verdana"
+                .Styles.LastPredefined.FontName = "Verdana"
+                .Styles.LineNumber.FontName = "Verdana"
+                .Styles.Max.FontName = "Verdana"
+                .Lexing.SetKeywords(1, String.Join(" ", lite.ToArray()))
+                lst.Sort()
+                .AutoComplete.List.AddRange(lst)
+                .AutoComplete.RegisterImages(ico)
+                .AutoComplete.AutomaticLengthEntered = True
+                .AutoComplete.DropRestOfWord = True
+                .AutoComplete.AutoHide = False
+                .Indicators(0).Color = Color.Red
+            End With
+
+            Return scintilla
         End Function
 #End Region
     End Class
