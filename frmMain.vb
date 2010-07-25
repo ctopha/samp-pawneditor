@@ -1,18 +1,15 @@
-﻿Imports System.Collections.Generic
-Imports System.Drawing
+﻿Imports System.Drawing
 Imports System.IO
-Imports System.Runtime.InteropServices
-Imports System.Threading
 Imports System.Windows.Forms
+Imports System.Diagnostics
 Imports newPT
-Imports System.Xml
 
 Public Class frmMain
     Friend prs As Parser
     Private CodeTabs As New Dictionary(Of TabPage, CodeDocument)()
     Private cur_tbs As Integer = -1, hParam As Integer
-    Private gmn As Integer, fsn As Integer, etcn As Integer
-    Private cur_cd As CodeDocument
+    Private numNewDocs As Integer
+    Private currDoc As CodeDocument
     Private func As New Functions()
     Private cfs As c_function
 
@@ -22,7 +19,6 @@ Public Class frmMain
     Const FILE_OPEN As Integer = 4
 
     Private Sub LoadPrerequisites()
-
         prs = New Parser()
         Dim il As New ImageList()
         il.Images.Add(My.Resources.VSProject_genericfile)
@@ -81,30 +77,30 @@ Public Class frmMain
     End Sub
 
     Private Sub FindLocalFunc(ByVal cd As String, ByVal refresh As Boolean)
-        If cur_cd.lv Is Nothing OrElse refresh = True Then
+        If currDoc.lv Is Nothing OrElse refresh = True Then
             prs.CodeParser("null", cd, False, My.Settings.fd)
-            cur_cd.lv = prs.curFile
+            currDoc.lv = prs.curFile
         Else
-            prs.curFile = cur_cd.lv
+            prs.curFile = currDoc.lv
         End If
 
         treeCurrFile.Nodes.Clear()
 
-        For Each fnc As c_function In cur_cd.lv.functions.Values
+        For Each fnc As c_function In currDoc.lv.functions.Values
             Dim tn As New TreeNode(fnc.fName)
             tn.ImageIndex = 1
             tn.SelectedImageIndex = 1
             treeCurrFile.Nodes.Add(tn)
         Next
 
-        For Each fnc As c_function In cur_cd.lv.constants.Values
+        For Each fnc As c_function In currDoc.lv.constants.Values
             Dim tn As New TreeNode(fnc.fName)
             tn.ImageIndex = 2
             tn.SelectedImageIndex = 2
             treeCurrFile.Nodes.Add(tn)
         Next
 
-        For Each fnc As c_function In cur_cd.lv.variables.Values
+        For Each fnc As c_function In currDoc.lv.variables.Values
             Dim tn As New TreeNode(fnc.fName)
             tn.ImageIndex = 3
             tn.SelectedImageIndex = 3
@@ -119,7 +115,7 @@ Public Class frmMain
     ''' <param name="type">Either "new" or "open", no excuses</param>
     ''' <param name="FileName">The safe file name or null, if new</param>
     ''' <param name="FilePath">The FilePath or null, if new</param>
-    Private Sub NewScintillaInstance(ByVal type As String, ByVal FileName As String, ByVal FilePath As String)
+    Public Sub NewScintillaInstance(ByVal type As String, ByVal FileName As String, ByVal FilePath As String)
         Dim tb As TabPage = New TabPage(FileName)
         Dim pgsc As New ScintillaNet.Scintilla()
 
@@ -148,9 +144,10 @@ Public Class frmMain
         tb.Controls.Add(pgsc)
         tabcontrolOpenFiles.TabPages.Add(tb)
 
-        cur_cd = New CodeDocument(pgsc, FileName, FilePath)
-        CodeTabs.Add(tabcontrolOpenFiles.TabPages(tabcontrolOpenFiles.TabPages.Count - 1), cur_cd)
+        currDoc = New CodeDocument(pgsc, FileName, FilePath)
+        CodeTabs.Add(tabcontrolOpenFiles.TabPages(tabcontrolOpenFiles.TabPages.Count - 1), currDoc)
         tabcontrolOpenFiles.SelectedIndex = tabcontrolOpenFiles.TabPages.Count - 1
+        DiscChanger()
     End Sub
 
     Private Sub DestroyScintillaInstance(ByVal inst As TabPage)
@@ -187,29 +184,39 @@ Public Class frmMain
     End Sub
 
     Private Sub DiscChanger()
-        If cur_cd.[Interface].UndoRedo.CanUndo = False Then
-            toolstripUndo.Enabled = False
-            'undoToolStripMenuItem.Enabled = False
+        If tabcontrolOpenFiles.TabCount <= 0 Then 'If there is not tab open
+
         Else
-            toolstripUndo.Enabled = True
-            'undoToolStripMenuItem.Enabled = True
-        End If
-        If cur_cd.[Interface].UndoRedo.CanRedo = True Then
-            toolstripRedo.Enabled = True
-            'redoToolStripMenuItem.Enabled = True
-        Else
-            toolstripRedo.Enabled = False
-            'redoToolStripMenuItem.Enabled = False
+
         End If
 
-        If cur_cd.IsEdited = False Then
+        'UNDO
+        If currDoc.[Interface].UndoRedo.CanUndo = False Then
+            toolstripUndo.Enabled = False
+            UndoToolStripMenuItem.Enabled = False
+        Else
+            toolstripUndo.Enabled = True
+            UndoToolStripMenuItem.Enabled = True
+        End If
+
+        'REDO
+        If currDoc.[Interface].UndoRedo.CanRedo = True Then
+            toolstripRedo.Enabled = True
+            RedoToolStripMenuItem.Enabled = True
+        Else
+            toolstripRedo.Enabled = False
+            RedoToolStripMenuItem.Enabled = False
+        End If
+
+        'SAVE
+        If currDoc.IsEdited = False Then
             'save_tbcm.Enabled = False
             toolstripSave.Enabled = False
-            'saveToolStripMenuItem.Enabled = False
+            SaveToolStripMenuItem.Enabled = False
         Else
             'save_tbcm.Enabled = True
             toolstripSave.Enabled = True
-            'saveToolStripMenuItem.Enabled = True
+            SaveToolStripMenuItem.Enabled = True
         End If
     End Sub
 
@@ -218,16 +225,16 @@ Public Class frmMain
     ''' </summary>
     ''' <param name="errq">The error, in its full glory</param>
     Private Sub DispErr(ByVal errq As String)
-        For Each erl As [Error] In cur_cd.Errors.Values
-            cur_cd.[Interface].Lines(erl.Line - 1).Range.ClearIndicator(0)
+        For Each erl As [Error] In currDoc.Errors.Values
+            currDoc.[Interface].Lines(erl.Line - 1).Range.ClearIndicator(0)
         Next
-        cur_cd.Errors.Clear()
+        currDoc.Errors.Clear()
         Dim terr As String = If((errq.IndexOf("Compilation") <> -1), errq.Remove(errq.IndexOf("Compilation")), errq)
         terr = terr.Trim()
         Dim errors As String() = terr.Split(ControlChars.Lf)
         For Each [error] As String In errors
             Dim err_elems As [Error] = newPT.ErrorParser.ParseCompilerError([error])
-            cur_cd.Errors.Add(LoadErrorsIntoList(err_elems), err_elems)
+            currDoc.Errors.Add(LoadErrorsIntoList(err_elems), err_elems)
         Next
     End Sub
 
@@ -242,22 +249,22 @@ Public Class frmMain
         Next
         lvsi_err(1).Text = err.ID.ToString()
         lvsi_err(2).Text = err.Description
-        lvsi_err(3).Text = cur_cd.FileName
+        lvsi_err(3).Text = currDoc.FileName
         lvsi_err(4).Text = err.Line.ToString()
-        cur_cd.[Interface].Lines(err.Line - 1).Range.SetIndicator(0)
+        currDoc.[Interface].Lines(err.Line - 1).Range.SetIndicator(0)
         Dim lvi_err As New ListViewItem(lvsi_err, CInt(err.Type))
         lstErrors.Items.Add(lvi_err)
         Return lvi_err
     End Function
 
     Private Sub pgsc_TextChanged(ByVal sender As Object, ByVal e As EventArgs)
-        'If cur_cd.Initial = True Then
-        '    cur_cd.Initial = False
-        '    cur_cd.[Interface].UndoRedo.EmptyUndoBuffer()
-        'ElseIf cur_cd.IsEdited = False Then
-        '    cur_cd.IsEdited = True
-        '    tabcontrolOpenFiles.SelectedTab.Text = cur_cd.FileName + "*"
-        'End If
+        If currDoc.Initial = True Then
+            currDoc.Initial = False
+            currDoc.[Interface].UndoRedo.EmptyUndoBuffer()
+        ElseIf currDoc.IsEdited = False Then
+            currDoc.IsEdited = True
+            tabcontrolOpenFiles.SelectedTab.Text = currDoc.FileName + "*"
+        End If
         DiscChanger()
     End Sub
 
@@ -325,21 +332,49 @@ Public Class frmMain
     End Sub
 
     Private Sub pgsc_KeyUp(ByVal sender As Object, ByVal e As KeyEventArgs)
-        statusINS.Text = If((cur_cd.[Interface].OverType = True), "OVR", "INS")
+        statusINS.Text = If((currDoc.[Interface].OverType = True), "OVR", "INS")
     End Sub
 
     Private Sub pgsc_SelectionChanged(ByVal sender As Object, ByVal e As EventArgs)
-        statusLine.Text = "Ln " & (cur_cd.[Interface].Lines.Current.VisibleLineNumber + 1)
-        statusChr.Text = "Ch " & (cur_cd.[Interface].Selection.Start - cur_cd.[Interface].Lines.Current.StartPosition + 1)
+        statusLine.Text = "Ln " & (currDoc.[Interface].Lines.Current.VisibleLineNumber + 1)
+        statusChr.Text = "Ch " & (currDoc.[Interface].Selection.Start - currDoc.[Interface].Lines.Current.StartPosition + 1)
     End Sub
+
+    Private Function CheckupOK()
+        Dim essFiles As String() = {"pawncc.exe", "pawnc.dll", "libpawnc.dll", "ScintillaNet.dll", "newPT.dll", "cpp.xml"}
+
+        For file As Integer = 0 To essFiles.Length - 1
+            If My.Computer.FileSystem.FileExists(Application.StartupPath & "\" & essFiles(file)) = False Then
+                MsgBox("Oops, something went wrong! Be sure to have these files in the same folder as this program, before you start it:" & vbNewLine & vbNewLine & _
+                       "'pawncc.exe', 'pawnc.dll', 'libpawnc.dll', 'ScintillaNet.dll', 'cpp.xml' and 'newPT.dll'." & vbNewLine & vbNewLine & _
+                       "Program will now shutdown.", MsgBoxStyle.Critical)
+                Return False
+            End If
+        Next
+        Return True
+
+    End Function
 
     Private Sub frmMain_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
-        LoadPrerequisites()
-    End Sub
+        'If the application starts from an associated file type then load the according file
+        If My.Application.CommandLineArgs.Count > 0 Then
+            Dim procPawn As Process() = Process.GetProcessesByName("samp_pawneditor")
+            If procPawn.Length > 0 Then
+                MsgBox("Another instance of this program is already running!")
+                Close()
+            Else
+                Dim filePathAndName As String = My.Application.CommandLineArgs.Item(0).ToString
+                Dim fileName As String = System.IO.Path.GetFileName(filePathAndName)
 
-    Private Sub toolstripNew_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripNew.Click
-        NewScintillaInstance("new_gm", "New Gamemode (" & gmn & ")", Nothing)
-        gmn += 1
+                NewScintillaInstance(FILE_OPEN, fileName, filePathAndName)
+            End If
+        ElseIf CheckupOK() = True Then
+            LoadPrerequisites()
+            dlgScintillaFont.Font = My.Settings.font
+            tstripIncludeHelp.Text = Nothing
+        Else
+            Close()
+        End If
     End Sub
 
     Private Sub frmMain_Resize(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Resize
@@ -350,11 +385,26 @@ Public Class frmMain
         lstvw_line.Width = lstvw_wdth * 0.1
     End Sub
 
-    Private Sub OptionsToolStripMenuItem1_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles OptionsToolStripMenuItem1.Click
+    Private Sub DisplayBuildOptions(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles BuildOptionsToolStripMenuItem.Click
         frmBuildOptions.ShowDialog()
     End Sub
 
-    Private Sub toolstripOpen_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripOpen.Click
+    Private Sub NewGamemode(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles newGamemodeToolStripMenuItem.Click
+        NewScintillaInstance(FILE_NEW_GM, "New Gamemode (" & numNewDocs & ")", Nothing)
+        numNewDocs += 1
+    End Sub
+
+    Private Sub newFilterscript(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles newFilterscriptToolStripMenuItem.Click
+        NewScintillaInstance(FILE_NEW_FS, "New Filterscript (" & numNewDocs & ")", Nothing)
+        numNewDocs += 1
+    End Sub
+
+    Private Sub newBlankDoc(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripNew.Click, newBlankDocToolStripMenuItem.Click
+        NewScintillaInstance(FILE_NEW, "New PAWN Script (" & numNewDocs & ")", Nothing)
+        numNewDocs += 1
+    End Sub
+
+    Private Sub OpenFile(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripOpen.Click, OpenToolStripMenuItem.Click
         If dlgOpenFile.ShowDialog() = DialogResult.OK Then
             For i As Integer = 0 To dlgOpenFile.FileNames.Length - 1
                 NewScintillaInstance(FILE_OPEN, dlgOpenFile.SafeFileNames(i), dlgOpenFile.FileNames(i))
@@ -362,62 +412,98 @@ Public Class frmMain
         End If
     End Sub
 
-    Private Sub toolstripFont_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripFont.Click
+    Private Sub ChangeFont(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles ChangeFontToolStripMenuItem.Click
+        'Change Scintilla's font
         If dlgScintillaFont.ShowDialog = Windows.Forms.DialogResult.OK Then
             My.Settings.font = dlgScintillaFont.Font
         End If
     End Sub
 
-    Private Sub toolstripSave_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripSave.Click
-        If cur_cd.FilePath IsNot Nothing Then
-            SaveScintillaDoc(cur_cd, -1, cur_cd.FileName, cur_cd.FilePath)
+    Private Sub SaveFile(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripSave.Click, SaveToolStripMenuItem.Click
+        If currDoc.FilePath IsNot Nothing Then
+            SaveScintillaDoc(currDoc, -1, currDoc.FileName, currDoc.FilePath)
         Else
-            If spf_main.ShowDialog() = DialogResult.OK Then
-                SaveScintillaDoc(cur_cd, -1, Path.GetFileName(spf_main.FileName), spf_main.FileName)
+            If dlgSaveFile.ShowDialog() = DialogResult.OK Then
+                SaveScintillaDoc(currDoc, -1, Path.GetFileName(dlgSaveFile.FileName), dlgSaveFile.FileName)
             Else
                 Return
             End If
         End If
-
     End Sub
 
-    Private Sub toolstripCut_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripCut.Click
-        If cur_cd.[Interface].Selection.Text = "" Then
+    Private Sub SaveAs(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles SaveAsToolStripMenuItem.Click
+        If dlgSaveFile.ShowDialog() = DialogResult.OK Then
+            SaveScintillaDoc(currDoc, -1, Path.GetFileName(dlgSaveFile.FileName), dlgSaveFile.FileName)
+        Else
             Return
         End If
-        Clipboard.SetText(cur_cd.[Interface].Selection.Text)
-        cur_cd.[Interface].Selection.Clear()
     End Sub
 
-    Private Sub toolstripCopy_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripCopy.Click
-        If cur_cd.[Interface].Selection.Text = "" Then
+    Private Sub SaveAll(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles SaveAllToolStripMenuItem.Click, toolstripSaveAll.Click
+
+    End Sub
+
+    Private Sub CloseDoc(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripClose.Click, CloseToolStripMenuItem.Click
+        If cur_tbs = -1 Then
             Return
         End If
-        Clipboard.SetText(cur_cd.[Interface].Selection.Text)
+        Dim sel_cd As CodeDocument = CodeTabs(tabcontrolOpenFiles.TabPages(cur_tbs))
+        If sel_cd.IsEdited = True Then
+            Dim dr As DialogResult = MessageBox.Show("Do you want to save changes made to this file?", "Save Changes?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question)
+            Select Case dr
+                Case DialogResult.Yes
+                    'save_tbcm_Click(sender, e)
+                    Exit Select
+
+                Case DialogResult.No
+                    Exit Select
+
+                Case DialogResult.Cancel
+                    Return
+            End Select
+        End If
+        DestroyScintillaInstance(tabcontrolOpenFiles.TabPages(cur_tbs))
+
     End Sub
 
-    Private Sub toolstripPaste_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripPaste.Click
-        If cur_cd.[Interface].Selection.Text <> "" Then
-            cur_cd.[Interface].Selection.Text = Clipboard.GetText()
+    Private Sub Cut(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripCut.Click, CutToolStripMenuItem.Click
+        If currDoc.[Interface].Selection.Text = "" Then
             Return
         End If
-        cur_cd.[Interface].InsertText(Clipboard.GetText())
+        Clipboard.SetText(currDoc.[Interface].Selection.Text)
+        currDoc.[Interface].Selection.Clear()
     End Sub
 
-    Private Sub toolstripUndo_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripUndo.Click
-        cur_cd.Interface.UndoRedo.Undo()
+    Private Sub Copy(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripCopy.Click, CopyToolStripMenuItem.Click
+        If currDoc.[Interface].Selection.Text = "" Then
+            Return
+        End If
+        Clipboard.SetText(currDoc.[Interface].Selection.Text)
+    End Sub
+
+    Private Sub Paste(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripPaste.Click, PasteToolStripMenuItem.Click
+        If currDoc.[Interface].Selection.Text <> "" Then
+            currDoc.[Interface].Selection.Text = Clipboard.GetText()
+            Return
+        End If
+        currDoc.[Interface].InsertText(Clipboard.GetText())
+    End Sub
+
+    Private Sub Undo(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripUndo.Click, UndoToolStripMenuItem.Click
+        currDoc.Interface.UndoRedo.Undo()
         DiscChanger()
     End Sub
 
-    Private Sub toolstripRedo_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripRedo.Click
-        cur_cd.Interface.UndoRedo.Redo()
+    Private Sub Redo(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripRedo.Click, RedoToolStripMenuItem.Click
+        currDoc.Interface.UndoRedo.Redo()
         DiscChanger()
     End Sub
 
-    Private Sub toolstripCompile_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripCompile.Click
-        toolstripSave_Click(sender, e)
+    Private Sub Compile(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripCompile.Click, CompileToolStripMenuItem.Click
+        SaveFile(sender, e) 'Save current file before compiling it
+
         lstErrors.Items.Clear()
-        If cur_cd.FilePath Is Nothing Then
+        If currDoc.FilePath Is Nothing Then
             Return
         End If
         Dim pcmp As New System.Diagnostics.Process()
@@ -427,24 +513,24 @@ Public Class frmMain
         pcmp.StartInfo.CreateNoWindow = True
         'MessageBox.Show(SAMPCE.Properties.Settings.Default.cpath);
         pcmp.StartInfo.FileName = My.Settings.cpath
-        pcmp.StartInfo.Arguments = My.Settings.cargs + " """ + cur_cd.FilePath & """"
-        t_cout.Text += vbCr & vbLf & "=== BEGIN OUTPUT FOR " + cur_cd.FileName & " ===" & vbCr & vbLf
+        pcmp.StartInfo.Arguments = My.Settings.cargs + " """ + currDoc.FilePath & """"
+        txtCompilerOutput.Text += vbCr & vbLf & "=== BEGIN OUTPUT FOR " + currDoc.FileName & " ===" & vbCr & vbLf
         pcmp.Start()
         Dim output As String = pcmp.StandardOutput.ReadToEnd()
         Dim err As String = pcmp.StandardError.ReadToEnd()
         pcmp.WaitForExit()
         pcmp.Close()
-        t_cout.Text += (output & vbCr & vbLf & "=== END OUTPUT FOR ") + cur_cd.FileName & " ===" & vbCr & vbLf
-        t_cout.SelectionStart = t_cout.Text.Length
-        t_cout.ScrollToCaret()
+        txtCompilerOutput.Text += (output & vbCr & vbLf & "=== END OUTPUT FOR ") + currDoc.FileName & " ===" & vbCr & vbLf
+        txtCompilerOutput.SelectionStart = txtCompilerOutput.Text.Length
+        txtCompilerOutput.ScrollToCaret()
         If err <> "" Then
             DispErr(err)
         End If
         If Not lstErrors.Items.ContainsKey(CInt(ErrorType.[Error]).ToString()) Then
-            Dim fi As New FileInfo(Path.GetFileNameWithoutExtension(cur_cd.FileName) + ".amx")
+            Dim fi As New FileInfo(Path.GetFileNameWithoutExtension(currDoc.FileName) + ".amx")
             If My.Settings.afl = "pwn" Then
                 Try
-                    fi.MoveTo(cur_cd.FilePath)
+                    fi.MoveTo(currDoc.FilePath)
                 Catch ex As Exception
                     MessageBox.Show("Could not move resulting amx file! Reason: " + ex.Message.ToString(), "Error!", MessageBoxButtons.OK, MessageBoxIcon.[Error])
                 End Try
@@ -454,8 +540,75 @@ Public Class frmMain
                 Catch ex As Exception
                     MessageBox.Show("Could not move resulting amx file! Reason: " + ex.Message.ToString(), "Error!", MessageBoxButtons.OK, MessageBoxIcon.[Error])
                 End Try
-
             End If
         End If
     End Sub
+
+    Private Sub AssociatepwnFilesToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles AssociatepwnFilesToolStripMenuItem.Click
+        If Not File.Exists(Environment.CurrentDirectory + "/pawn.ico") Then
+            MsgBox("pawn.ico is missing! Put it back to its place!", MsgBoxStyle.Critical)
+            Return
+        Else
+
+            Dim Assoc As New Associations.AF_FileAssociator(".pwn")
+            Assoc.Create("SA-MP Pawn Editor", "PAWN Source Code", New Associations.ProgramIcon(Environment.CurrentDirectory + "/pawn.ico"), New Associations.ExecApplication(Application.ExecutablePath), New Associations.OpenWithList(New String() {"SA-MP Pawn Editor"}))
+        End If
+    End Sub
+
+    Private Sub tabcontrolOpenFiles_DragDrop(ByVal sender As Object, ByVal e As System.Windows.Forms.DragEventArgs) Handles tabcontrolOpenFiles.DragDrop
+        'Thanks to Cybernavigator @ portugal-a-programar.org - http://www.portugal-a-programar.org/forum/index.php?topic=20665.0
+
+        Dim filePathAndName As String = CType(e.Data.GetData(DataFormats.FileDrop), Array).GetValue(0).ToString
+        Dim fileName As String = System.IO.Path.GetFileName(filePathAndName)
+
+        NewScintillaInstance(FILE_OPEN, fileName, filePathAndName)
+    End Sub
+
+    Private Sub tabcontrolOpenFiles_DragEnter(ByVal sender As Object, ByVal e As System.Windows.Forms.DragEventArgs) Handles tabcontrolOpenFiles.DragEnter
+        'Thanks to Cybernavigator @ portugal-a-programar.org - http://www.portugal-a-programar.org/forum/index.php?topic=20665.0
+
+        Dim fileExt As String = System.IO.Path.GetExtension(CType(e.Data.GetData(DataFormats.FileDrop), Array).GetValue(0).ToString).ToString.ToLower
+
+        If (e.Data.GetDataPresent(DataFormats.FileDrop)) And (fileExt = ".pwn" Or fileExt = ".inc") Then
+            e.Effect = DragDropEffects.Copy
+        End If
+    End Sub
+
+    Private Sub treeIncludes_NodeMouseHover(ByVal sender As Object, ByVal e As System.Windows.Forms.TreeNodeMouseHoverEventArgs) Handles treeIncludes.NodeMouseHover
+        If e.Node.Parent IsNot Nothing AndAlso e.Node.ImageIndex = 1 Then
+            Dim cftemp As c_function = prs.SearchForFunc(e.Node.Text)
+            tstripIncludeHelp.Text = cftemp.fReturn + ":" + cftemp.fName & "(" & String.Join(",", cftemp.fParams) & ")"
+        End If
+    End Sub
+
+    Private Sub treeIncludes_NodeMouseDoubleClick(ByVal sender As Object, ByVal e As System.Windows.Forms.TreeNodeMouseClickEventArgs) Handles treeIncludes.NodeMouseDoubleClick
+        If e.Node.Parent IsNot Nothing AndAlso e.Node.ImageIndex = 1 Then
+            currDoc.[Interface].InsertText(e.Node.Text)
+        End If
+    End Sub
+
+    Private Sub SelectAllToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles SelectAllToolStripMenuItem.Click
+        currDoc.Interface.Selection.SelectAll()
+    End Sub
+
+    Private Sub GoToLineToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles GoToLineToolStripMenuItem.Click
+        currDoc.Interface.GoTo.ShowGoToDialog()
+    End Sub
+
+    Private Sub FindAndReplaceToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles FindAndReplaceToolStripMenuItem.Click
+        currDoc.Interface.FindReplace.ShowReplace()
+    End Sub
+
+    Private Sub FindToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles FindToolStripMenuItem.Click
+        currDoc.Interface.FindReplace.ShowFind()
+    End Sub
+
+    Private Sub KeyboardShortcutsToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles KeyboardShortcutsToolStripMenuItem.Click
+        MsgBox(Nothing)
+    End Sub
+
+    Private Sub ExitToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles ExitToolStripMenuItem.Click
+        Close()
+    End Sub
 End Class
+
