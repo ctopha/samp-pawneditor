@@ -17,6 +17,7 @@ Public Class frmMain
     Const FILE_NEW_FS As Integer = 2
     Const FILE_NEW As Integer = 3
     Const FILE_OPEN As Integer = 4
+    Const MSGBOX_TITLE As String = "SA-MP Pawn Editor"
 
     Private Sub LoadPrerequisites()
         prs = New Parser()
@@ -130,9 +131,9 @@ Public Class frmMain
                 Dim sr As New StreamReader(FilePath)
                 pgsc = func.InitSC(sr.ReadToEnd())
                 sr.Close()
-            Case Else 'Something went wrong. Be safe, open just a new tab and display and error message
+            Case Else 'Something went wrong. Be safe, open just a new tab and display an error message
                 pgsc = func.InitSC(Nothing)
-                MsgBox("It appears that something went wrong! Contact the program's autor.", MsgBoxStyle.Exclamation)
+                MsgBox("It appears that something went wrong! Contact the program's autor.", MsgBoxStyle.Exclamation, MSGBOX_TITLE)
         End Select
 
         AddHandler pgsc.TextChanged, AddressOf pgsc_TextChanged
@@ -183,11 +184,52 @@ Public Class frmMain
         cd.IsEdited = False
     End Sub
 
+    Private Sub EnableOperations(ByVal bool As Boolean)
+        toolstripClose.Enabled = bool
+        CloseToolStripMenuItem.Enabled = bool
+
+        toolstripCompile.Enabled = bool
+        CompileToolStripMenuItem.Enabled = bool
+
+        toolstripCompileRun.Enabled = bool
+        CompileAndRunToolStripMenuItem.Enabled = bool
+
+        toolstripCopy.Enabled = bool
+        CopyToolStripMenuItem.Enabled = bool
+
+        toolstripCut.Enabled = bool
+        CutToolStripMenuItem.Enabled = bool
+
+        toolstripFind.Enabled = bool
+        FindToolStripMenuItem.Enabled = bool
+
+        toolstripPaste.Enabled = bool
+        PasteToolStripMenuItem.Enabled = bool
+
+        toolstripFindReplace.Enabled = bool
+        FindAndReplaceToolStripMenuItem.Enabled = bool
+
+        GoToLineToolStripMenuItem.Enabled = bool
+
+        SelectAllToolStripMenuItem.Enabled = bool
+
+        SaveAsToolStripMenuItem.Enabled = bool
+    End Sub
+
     Private Sub DiscChanger()
         If tabcontrolOpenFiles.TabCount <= 0 Then 'If there is not tab open
+            EnableOperations(False)
+        Else : EnableOperations(True)
+        End If
 
+        If tabcontrolOpenFiles.TabCount > 1 Then
+            toolstripSaveAll.Enabled = True
+            SaveAllToolStripMenuItem.Enabled = True
+            CloseAllToolStripMenuItem.Enabled = True
         Else
-
+            toolstripSaveAll.Enabled = False
+            SaveAllToolStripMenuItem.Enabled = False
+            CloseAllToolStripMenuItem.Enabled = False
         End If
 
         'UNDO
@@ -213,10 +255,45 @@ Public Class frmMain
             'save_tbcm.Enabled = False
             toolstripSave.Enabled = False
             SaveToolStripMenuItem.Enabled = False
+            SaveToolStripMenuItem1.Enabled = False 'Tab context menu strip
+            SaveAsToolStripMenuItem1.Enabled = False 'Tab context menu strip
         Else
             'save_tbcm.Enabled = True
             toolstripSave.Enabled = True
             SaveToolStripMenuItem.Enabled = True
+            SaveToolStripMenuItem1.Enabled = True 'Tab context menu strip
+            SaveAsToolStripMenuItem1.Enabled = True 'Tab context menu strip
+        End If
+
+        'If the document has more than one line, we enable compile, find and gotoline operations
+        If currDoc.Interface.Lines.Count > 1 Then
+            toolstripCompile.Enabled = True
+            CompileToolStripMenuItem.Enabled = True
+
+            toolstripCompileRun.Enabled = True
+            CompileAndRunToolStripMenuItem.Enabled = True
+
+            toolstripFind.Enabled = True
+            FindToolStripMenuItem.Enabled = True
+
+            toolstripFindReplace.Enabled = True
+            FindAndReplaceToolStripMenuItem.Enabled = True
+
+            GoToLineToolStripMenuItem.Enabled = True
+        Else
+            toolstripCompile.Enabled = False
+            CompileToolStripMenuItem.Enabled = False
+
+            toolstripCompileRun.Enabled = False
+            CompileAndRunToolStripMenuItem.Enabled = False
+
+            toolstripFind.Enabled = False
+            FindToolStripMenuItem.Enabled = False
+
+            toolstripFindReplace.Enabled = False
+            FindAndReplaceToolStripMenuItem.Enabled = False
+
+            GoToLineToolStripMenuItem.Enabled = False
         End If
     End Sub
 
@@ -347,31 +424,46 @@ Public Class frmMain
             If My.Computer.FileSystem.FileExists(Application.StartupPath & "\" & essFiles(file)) = False Then
                 MsgBox("Oops, something went wrong! Be sure to have these files in the same folder as this program, before you start it:" & vbNewLine & vbNewLine & _
                        "'pawncc.exe', 'pawnc.dll', 'libpawnc.dll', 'ScintillaNet.dll', 'cpp.xml' and 'newPT.dll'." & vbNewLine & vbNewLine & _
-                       "Program will now shutdown.", MsgBoxStyle.Critical)
+                       "Program will now shutdown.", MsgBoxStyle.Critical, MSGBOX_TITLE)
                 Return False
             End If
         Next
         Return True
-
     End Function
 
+    Private Sub frmMain_FormClosing(ByVal sender As Object, ByVal e As System.Windows.Forms.FormClosingEventArgs) Handles Me.FormClosing
+        For Each tp As TabPage In tabcontrolOpenFiles.TabPages
+            If Not CodeTabs.ContainsKey(tp) Then
+                Continue For
+            End If
+            Dim tbp_cd As CodeDocument = CodeTabs(tp)
+            If tbp_cd.IsEdited = True Then
+                Dim dr As DialogResult = MessageBox.Show("Do you want to save changes made to " & tbp_cd.FileName & "?", "Save Changes?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question)
+                Select Case dr
+                    Case DialogResult.Yes
+                        'save_tbcm_Click(sender, e)
+                        Exit Select
+                    Case DialogResult.No
+                        Exit Select
+                    Case DialogResult.Cancel
+                        Return
+                End Select
+            End If
+        Next
+    End Sub
+
     Private Sub frmMain_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
-        'If the application starts from an associated file type then load the according file
-        If My.Application.CommandLineArgs.Count > 0 Then
-            Dim procPawn As Process() = Process.GetProcessesByName("samp_pawneditor")
-            If procPawn.Length > 0 Then
-                MsgBox("Another instance of this program is already running!")
-                Close()
-            Else
+        If CheckupOK() = True Then
+            LoadPrerequisites()
+            dlgScintillaFont.Font = My.Settings.font
+            tstripIncludeHelp.Text = Nothing
+
+            If My.Application.CommandLineArgs.Count > 0 Then 'If the application starts from an associated file type then load the according file
                 Dim filePathAndName As String = My.Application.CommandLineArgs.Item(0).ToString
                 Dim fileName As String = System.IO.Path.GetFileName(filePathAndName)
 
                 NewScintillaInstance(FILE_OPEN, fileName, filePathAndName)
             End If
-        ElseIf CheckupOK() = True Then
-            LoadPrerequisites()
-            dlgScintillaFont.Font = My.Settings.font
-            tstripIncludeHelp.Text = Nothing
         Else
             Close()
         End If
@@ -425,8 +517,6 @@ Public Class frmMain
         Else
             If dlgSaveFile.ShowDialog() = DialogResult.OK Then
                 SaveScintillaDoc(currDoc, -1, Path.GetFileName(dlgSaveFile.FileName), dlgSaveFile.FileName)
-            Else
-                Return
             End If
         End If
     End Sub
@@ -434,8 +524,6 @@ Public Class frmMain
     Private Sub SaveAs(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles SaveAsToolStripMenuItem.Click
         If dlgSaveFile.ShowDialog() = DialogResult.OK Then
             SaveScintillaDoc(currDoc, -1, Path.GetFileName(dlgSaveFile.FileName), dlgSaveFile.FileName)
-        Else
-            Return
         End If
     End Sub
 
@@ -463,7 +551,6 @@ Public Class frmMain
             End Select
         End If
         DestroyScintillaInstance(tabcontrolOpenFiles.TabPages(cur_tbs))
-
     End Sub
 
     Private Sub Cut(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripCut.Click, CutToolStripMenuItem.Click
@@ -546,12 +633,15 @@ Public Class frmMain
 
     Private Sub AssociatepwnFilesToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles AssociatepwnFilesToolStripMenuItem.Click
         If Not File.Exists(Environment.CurrentDirectory + "/pawn.ico") Then
-            MsgBox("pawn.ico is missing! Put it back to its place!", MsgBoxStyle.Critical)
-            Return
+            MsgBox("pawn.ico is missing! Put it back to its place!", MsgBoxStyle.Critical, MSGBOX_TITLE)
         Else
-
-            Dim Assoc As New Associations.AF_FileAssociator(".pwn")
-            Assoc.Create("SA-MP Pawn Editor", "PAWN Source Code", New Associations.ProgramIcon(Environment.CurrentDirectory + "/pawn.ico"), New Associations.ExecApplication(Application.ExecutablePath), New Associations.OpenWithList(New String() {"SA-MP Pawn Editor"}))
+            If MsgBox("Are you running this program as Administrator?" & vbNewLine & vbNewLine & _
+                      "Note: This program needs to be run as Administrator in order to apply file association.", MsgBoxStyle.Question, MSGBOX_TITLE) _
+                      = MsgBoxResult.Yes Then
+                Dim Assoc As New Associations.AF_FileAssociator(".pwn")
+                Assoc.Create("SA-MP Pawn Editor", "PAWN Source Code", New Associations.ProgramIcon(Environment.CurrentDirectory + "/pawn.ico"), New Associations.ExecApplication(Application.ExecutablePath), New Associations.OpenWithList(New String() {"SA-MP Pawn Editor"}))
+                MsgBox(".pwn files should now be associated with this program.", MsgBoxStyle.Information, MSGBOX_TITLE)
+            End If
         End If
     End Sub
 
@@ -595,20 +685,56 @@ Public Class frmMain
         currDoc.Interface.GoTo.ShowGoToDialog()
     End Sub
 
-    Private Sub FindAndReplaceToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles FindAndReplaceToolStripMenuItem.Click
+    Private Sub FindAndReplace(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles FindAndReplaceToolStripMenuItem.Click, toolstripFindReplace.Click
         currDoc.Interface.FindReplace.ShowReplace()
     End Sub
 
-    Private Sub FindToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles FindToolStripMenuItem.Click
+    Private Sub Find(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles FindToolStripMenuItem.Click, toolstripFind.Click
         currDoc.Interface.FindReplace.ShowFind()
-    End Sub
-
-    Private Sub KeyboardShortcutsToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles KeyboardShortcutsToolStripMenuItem.Click
-        MsgBox(Nothing)
     End Sub
 
     Private Sub ExitToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles ExitToolStripMenuItem.Click
         Close()
+    End Sub
+
+    Private Sub SelectTabOnRightClick(ByVal sender As Object, ByVal e As System.Windows.Forms.MouseEventArgs) Handles tabcontrolOpenFiles.MouseUp
+        'Thanks to sfnake and sonia sardana @ daniweb.com - http://www.daniweb.com/forums/thread206007.html
+
+        If e.Button = Windows.Forms.MouseButtons.Right Then
+            For i As Integer = 0 To tabcontrolOpenFiles.TabPages.Count - 1
+                If tabcontrolOpenFiles.GetTabRect(i).Contains(e.Location) Then
+                    tabcontrolOpenFiles.SelectedIndex = i
+                    Return
+                End If
+            Next
+        End If
+    End Sub
+
+    Private Sub tabcontrolOpenFiles_SelectedIndexChanged(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles tabcontrolOpenFiles.SelectedIndexChanged
+        For Each erl As [Error] In currDoc.Errors.Values
+            currDoc.[Interface].Lines(erl.Line - 1).Range.ClearIndicator(0)
+        Next
+        If currDoc.[Interface].FindReplace.Window.Visible = True Then
+            currDoc.[Interface].FindReplace.Window.Close()
+        End If
+
+        currDoc = CodeTabs(tabcontrolOpenFiles.SelectedTab)
+        treeCurrFile.Nodes.Clear()
+        lstErrors.Items.Clear()
+        FindLocalFunc(currDoc.[Interface].Text, False)
+        For Each fileerr As [Error] In currDoc.Errors.Values
+            LoadErrorsIntoList(fileerr)
+        Next
+        DiscChanger()
+    End Sub
+
+    Private Sub tmrMem_Tick(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles tmrMem.Tick
+        'Thanks to faq796-5655 @ tek-tips.com - http://www.tek-tips.com/faqs.cfm?fid=5655
+        Static frmTitle As String = Text
+
+        Dim proc As Process = Process.GetCurrentProcess
+        Text = frmTitle & " - " & (proc.WorkingSet64 / 1024).ToString("0,000") & " K"
+
     End Sub
 End Class
 
