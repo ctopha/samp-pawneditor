@@ -17,7 +17,55 @@ Public Class frmMain
     Const FILE_NEW_FS As Integer = 2
     Const FILE_NEW As Integer = 3
     Const FILE_OPEN As Integer = 4
-    Const MSGBOX_TITLE As String = "SA-MP Pawn Editor"
+    Const APP_TITLE As String = "SA-MP Pawn Editor"
+
+    Private Sub GetIncludedFiles()
+        tviewFilesIncluded.Nodes.Clear()
+
+        For Each line As ScintillaNet.Line In currDoc.Interface.Lines
+            'If this line is an include
+            If line.Text.ToString.Contains("#include") = True Then
+                'If the line contains an '"' char
+                If line.Text.ToString.Contains(Chr(34)) = True Then
+                    'Uncollapse the panel to see the included files
+                    If SplitContainer3.Panel2Collapsed = True Then
+                        SplitContainer3.Panel2Collapsed = False
+                    End If
+
+                    'Populate the treeview
+                    Dim include As String() = line.Text.Split(Chr(34)) 'Split the include line with '"'
+                    Dim dir As String = System.IO.Path.GetDirectoryName(currDoc.FilePath)
+                    Dim includeStr As String = include(1).ToString() 'Get the text between the '"'
+
+                    'Check if the include is inside a folder
+                    Dim includePathSplit As String() = include(1).ToString.Split(Chr(47)) 'Split by '/'
+
+                    'If it is inside a folder, create a new node with the folder's name
+                    If includePathSplit.Length > 1 Then
+                        'Check if that folder node already exists
+                        Dim includeFolder As String = includePathSplit(0).ToString
+                        Dim arrNodes As TreeNode() = tviewFilesIncluded.Nodes.Find(includeFolder, True)
+
+                        For i = 0 To arrNodes.Length - 1
+                            tviewFilesIncluded.SelectedNode = arrNodes(i)
+                            tviewFilesIncluded.SelectedNode.BackColor = Color.Red
+                        Next
+
+
+                        If arrNodes.Length > 0 Then
+
+                        Else 'If not, create it
+                            tviewFilesIncluded.Nodes.Add(includeFolder)
+                        End If
+
+
+                    Else 'It's not inside a folder then add it just to the first node of them all
+                        tviewFilesIncluded.Nodes.Add(includeStr)
+                    End If
+                End If
+            End If
+        Next
+    End Sub
 
     Private Sub LoadPrerequisites()
         prs = New Parser()
@@ -133,7 +181,7 @@ Public Class frmMain
                 sr.Close()
             Case Else 'Something went wrong. Be safe, open just a new tab and display an error message
                 pgsc = func.InitSC(Nothing)
-                MsgBox("It appears that something went wrong! Contact the program's autor.", MsgBoxStyle.Exclamation, MSGBOX_TITLE)
+                MsgBox("It appears that something went wrong! Contact the program's autor.", MsgBoxStyle.Exclamation, APP_TITLE)
         End Select
 
         AddHandler pgsc.TextChanged, AddressOf pgsc_TextChanged
@@ -153,9 +201,9 @@ Public Class frmMain
 
     Private Sub DestroyScintillaInstance(ByVal inst As TabPage)
         CodeTabs.Remove(inst)
-        If tabcontrolOpenFiles.TabPages.Count = 1 Then
-            NewScintillaInstance("new", "New Blank File", Nothing)
-        End If
+        'If tabcontrolOpenFiles.TabPages.Count = 1 Then
+        '    NewScintillaInstance("new", "New Blank File", Nothing)
+        'End If
 
         tabcontrolOpenFiles.TabPages.Remove(inst)
     End Sub
@@ -301,7 +349,7 @@ Public Class frmMain
     ''' Parses errors from PAWN and keeps it
     ''' </summary>
     ''' <param name="errq">The error, in its full glory</param>
-    Private Sub DispErr(ByVal errq As String)
+    Private Sub SaveErrors(ByVal errq As String)
         For Each erl As [Error] In currDoc.Errors.Values
             currDoc.[Interface].Lines(erl.Line - 1).Range.ClearIndicator(0)
         Next
@@ -424,7 +472,7 @@ Public Class frmMain
             If My.Computer.FileSystem.FileExists(Application.StartupPath & "\" & essFiles(file)) = False Then
                 MsgBox("Oops, something went wrong! Be sure to have these files in the same folder as this program, before you start it:" & vbNewLine & vbNewLine & _
                        "'pawncc.exe', 'pawnc.dll', 'libpawnc.dll', 'ScintillaNet.dll', 'cpp.xml' and 'newPT.dll'." & vbNewLine & vbNewLine & _
-                       "Program will now shutdown.", MsgBoxStyle.Critical, MSGBOX_TITLE)
+                       "Program will now shutdown.", MsgBoxStyle.Critical, APP_TITLE)
                 Return False
             End If
         Next
@@ -457,6 +505,7 @@ Public Class frmMain
             LoadPrerequisites()
             dlgScintillaFont.Font = My.Settings.font
             tstripIncludeHelp.Text = Nothing
+            'SplitContainer3.Panel2Collapsed = True
 
             If My.Application.CommandLineArgs.Count > 0 Then 'If the application starts from an associated file type then load the according file
                 Dim filePathAndName As String = My.Application.CommandLineArgs.Item(0).ToString
@@ -496,10 +545,11 @@ Public Class frmMain
         numNewDocs += 1
     End Sub
 
-    Private Sub OpenFile(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripOpen.Click, OpenToolStripMenuItem.Click
+    Private Sub OpenFile(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripOpen.Click, OpenToolStripMenuItem.Click, OpenToolStripMenuItem1.Click
         If dlgOpenFile.ShowDialog() = DialogResult.OK Then
             For i As Integer = 0 To dlgOpenFile.FileNames.Length - 1
                 NewScintillaInstance(FILE_OPEN, dlgOpenFile.SafeFileNames(i), dlgOpenFile.FileNames(i))
+                GetIncludedFiles()
             Next
         End If
     End Sub
@@ -532,14 +582,14 @@ Public Class frmMain
     End Sub
 
     Private Sub CloseDoc(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripClose.Click, CloseToolStripMenuItem.Click
-        If cur_tbs = -1 Then
-            Return
-        End If
-        Dim sel_cd As CodeDocument = CodeTabs(tabcontrolOpenFiles.TabPages(cur_tbs))
+        Dim selectedTab As Integer = tabcontrolOpenFiles.SelectedIndex
+
+        Dim sel_cd As CodeDocument = CodeTabs(tabcontrolOpenFiles.TabPages(selectedTab))
         If sel_cd.IsEdited = True Then
             Dim dr As DialogResult = MessageBox.Show("Do you want to save changes made to this file?", "Save Changes?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question)
             Select Case dr
                 Case DialogResult.Yes
+                    MsgBox("SAVING... NOT")
                     'save_tbcm_Click(sender, e)
                     Exit Select
 
@@ -550,7 +600,7 @@ Public Class frmMain
                     Return
             End Select
         End If
-        DestroyScintillaInstance(tabcontrolOpenFiles.TabPages(cur_tbs))
+        DestroyScintillaInstance(tabcontrolOpenFiles.TabPages(selectedTab))
     End Sub
 
     Private Sub Cut(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripCut.Click, CutToolStripMenuItem.Click
@@ -589,58 +639,66 @@ Public Class frmMain
     Private Sub Compile(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripCompile.Click, CompileToolStripMenuItem.Click
         SaveFile(sender, e) 'Save current file before compiling it
 
-        lstErrors.Items.Clear()
-        If currDoc.FilePath Is Nothing Then
-            Return
-        End If
-        Dim pcmp As New System.Diagnostics.Process()
-        pcmp.StartInfo.UseShellExecute = False
-        pcmp.StartInfo.RedirectStandardOutput = True
-        pcmp.StartInfo.RedirectStandardError = True
-        pcmp.StartInfo.CreateNoWindow = True
-        'MessageBox.Show(SAMPCE.Properties.Settings.Default.cpath);
-        pcmp.StartInfo.FileName = My.Settings.cpath
-        pcmp.StartInfo.Arguments = My.Settings.cargs + " """ + currDoc.FilePath & """"
-        txtCompilerOutput.Text += vbCr & vbLf & "=== BEGIN OUTPUT FOR " + currDoc.FileName & " ===" & vbCr & vbLf
-        pcmp.Start()
-        Dim output As String = pcmp.StandardOutput.ReadToEnd()
-        Dim err As String = pcmp.StandardError.ReadToEnd()
-        pcmp.WaitForExit()
-        pcmp.Close()
-        txtCompilerOutput.Text += (output & vbCr & vbLf & "=== END OUTPUT FOR ") + currDoc.FileName & " ===" & vbCr & vbLf
-        txtCompilerOutput.SelectionStart = txtCompilerOutput.Text.Length
-        txtCompilerOutput.ScrollToCaret()
-        If err <> "" Then
-            DispErr(err)
-        End If
-        If Not lstErrors.Items.ContainsKey(CInt(ErrorType.[Error]).ToString()) Then
-            Dim fi As New FileInfo(Path.GetFileNameWithoutExtension(currDoc.FileName) + ".amx")
-            If My.Settings.afl = "pwn" Then
-                Try
-                    fi.MoveTo(currDoc.FilePath)
-                Catch ex As Exception
-                    MessageBox.Show("Could not move resulting amx file! Reason: " + ex.Message.ToString(), "Error!", MessageBoxButtons.OK, MessageBoxIcon.[Error])
-                End Try
-            ElseIf My.Settings.afl = "custom" And My.Settings.aflcustom <> "" Then
-                Try
-                    fi.MoveTo(My.Settings.aflcustom)
-                Catch ex As Exception
-                    MessageBox.Show("Could not move resulting amx file! Reason: " + ex.Message.ToString(), "Error!", MessageBoxButtons.OK, MessageBoxIcon.[Error])
-                End Try
+        'Only compile it if the file has already been saved
+        If currDoc.FilePath IsNot Nothing Then
+            Dim pCompiler As New System.Diagnostics.Process()
+            Dim output As String, err As String
+
+            With pCompiler
+                .StartInfo.UseShellExecute = False
+                .StartInfo.RedirectStandardOutput = True
+                .StartInfo.RedirectStandardError = True
+                .StartInfo.CreateNoWindow = True
+                .StartInfo.FileName = My.Settings.cpath
+                .StartInfo.Arguments = My.Settings.cargs + " """ + currDoc.FilePath & """"
+                txtCompilerOutput.Text += vbCr & vbLf & "=== BEGIN OUTPUT FOR " + currDoc.FileName & " ===" & vbCr & vbLf
+                tstripIncludeHelp.Text = "Trying to compile! Please wait for the program to finish."
+                .Start()
+                output = .StandardOutput.ReadToEnd()
+                err = .StandardError.ReadToEnd()
+                .WaitForExit()
+                tstripIncludeHelp.Text = Nothing
+                .Close()
+            End With
+
+            txtCompilerOutput.Text += (output & vbCr & vbLf & "=== END OUTPUT FOR ") + currDoc.FileName & " ===" & vbCr & vbLf
+            txtCompilerOutput.SelectionStart = txtCompilerOutput.Text.Length
+            txtCompilerOutput.ScrollToCaret()
+            lstErrors.Items.Clear()
+
+            If err <> Nothing Then
+                SaveErrors(err)
+            End If
+
+            If Not lstErrors.Items.ContainsKey(CInt(ErrorType.[Error]).ToString()) Then
+                Dim fi As New FileInfo(Path.GetFileNameWithoutExtension(currDoc.FileName) + ".amx")
+                If My.Settings.afl = "pwn" Then
+                    Try
+                        fi.MoveTo(currDoc.FilePath)
+                    Catch ex As Exception
+                        MessageBox.Show("Could not move resulting amx file! Reason: " + ex.Message.ToString(), "Error!", MessageBoxButtons.OK, MessageBoxIcon.[Error])
+                    End Try
+                ElseIf My.Settings.afl = "custom" And My.Settings.aflcustom <> "" Then
+                    Try
+                        fi.MoveTo(My.Settings.aflcustom)
+                    Catch ex As Exception
+                        MessageBox.Show("Could not move resulting amx file! Reason: " + ex.Message.ToString(), "Error!", MessageBoxButtons.OK, MessageBoxIcon.[Error])
+                    End Try
+                End If
             End If
         End If
     End Sub
 
     Private Sub AssociatepwnFilesToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles AssociatepwnFilesToolStripMenuItem.Click
         If Not File.Exists(Environment.CurrentDirectory + "/pawn.ico") Then
-            MsgBox("pawn.ico is missing! Put it back to its place!", MsgBoxStyle.Critical, MSGBOX_TITLE)
+            MsgBox("pawn.ico is missing! Put it back to its place!", MsgBoxStyle.Critical, APP_TITLE)
         Else
             If MsgBox("Are you running this program as Administrator?" & vbNewLine & vbNewLine & _
-                      "Note: This program needs to be run as Administrator in order to apply file association.", MsgBoxStyle.Question, MSGBOX_TITLE) _
+                      "Note: This program needs to be run as Administrator in order to apply file association.", MsgBoxStyle.Question, APP_TITLE) _
                       = MsgBoxResult.Yes Then
                 Dim Assoc As New Associations.AF_FileAssociator(".pwn")
                 Assoc.Create("SA-MP Pawn Editor", "PAWN Source Code", New Associations.ProgramIcon(Environment.CurrentDirectory + "/pawn.ico"), New Associations.ExecApplication(Application.ExecutablePath), New Associations.OpenWithList(New String() {"SA-MP Pawn Editor"}))
-                MsgBox(".pwn files should now be associated with this program.", MsgBoxStyle.Information, MSGBOX_TITLE)
+                MsgBox(".pwn files should now be associated with this program.", MsgBoxStyle.Information, APP_TITLE)
             End If
         End If
     End Sub
@@ -664,14 +722,14 @@ Public Class frmMain
         End If
     End Sub
 
-    Private Sub treeIncludes_NodeMouseHover(ByVal sender As Object, ByVal e As System.Windows.Forms.TreeNodeMouseHoverEventArgs) Handles treeIncludes.NodeMouseHover
+    Private Sub treeIncludes_NodeMouseHover(ByVal sender As Object, ByVal e As System.Windows.Forms.TreeNodeMouseHoverEventArgs)
         If e.Node.Parent IsNot Nothing AndAlso e.Node.ImageIndex = 1 Then
             Dim cftemp As c_function = prs.SearchForFunc(e.Node.Text)
             tstripIncludeHelp.Text = cftemp.fReturn + ":" + cftemp.fName & "(" & String.Join(",", cftemp.fParams) & ")"
         End If
     End Sub
 
-    Private Sub treeIncludes_NodeMouseDoubleClick(ByVal sender As Object, ByVal e As System.Windows.Forms.TreeNodeMouseClickEventArgs) Handles treeIncludes.NodeMouseDoubleClick
+    Private Sub treeIncludes_NodeMouseDoubleClick(ByVal sender As Object, ByVal e As System.Windows.Forms.TreeNodeMouseClickEventArgs)
         If e.Node.Parent IsNot Nothing AndAlso e.Node.ImageIndex = 1 Then
             currDoc.[Interface].InsertText(e.Node.Text)
         End If
@@ -711,30 +769,40 @@ Public Class frmMain
     End Sub
 
     Private Sub tabcontrolOpenFiles_SelectedIndexChanged(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles tabcontrolOpenFiles.SelectedIndexChanged
-        For Each erl As [Error] In currDoc.Errors.Values
-            currDoc.[Interface].Lines(erl.Line - 1).Range.ClearIndicator(0)
-        Next
-        If currDoc.[Interface].FindReplace.Window.Visible = True Then
-            currDoc.[Interface].FindReplace.Window.Close()
-        End If
+        'If we have tabs open, prepare the selected tab stuff
+        If tabcontrolOpenFiles.TabCount > 0 Then
+            For Each erl As [Error] In currDoc.Errors.Values
+                currDoc.[Interface].Lines(erl.Line - 1).Range.ClearIndicator(0)
+            Next
+            If currDoc.[Interface].FindReplace.Window.Visible = True Then
+                currDoc.[Interface].FindReplace.Window.Close()
+            End If
 
-        currDoc = CodeTabs(tabcontrolOpenFiles.SelectedTab)
-        treeCurrFile.Nodes.Clear()
-        lstErrors.Items.Clear()
-        FindLocalFunc(currDoc.[Interface].Text, False)
-        For Each fileerr As [Error] In currDoc.Errors.Values
-            LoadErrorsIntoList(fileerr)
-        Next
+            currDoc = CodeTabs(tabcontrolOpenFiles.SelectedTab)
+
+            treeCurrFile.Nodes.Clear()
+            lstErrors.Items.Clear()
+
+            GetIncludedFiles()
+
+            FindLocalFunc(currDoc.[Interface].Text, False)
+            For Each fileerr As [Error] In currDoc.Errors.Values
+                LoadErrorsIntoList(fileerr)
+            Next
+        End If
         DiscChanger()
     End Sub
 
-    Private Sub tmrMem_Tick(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles tmrMem.Tick
-        'Thanks to faq796-5655 @ tek-tips.com - http://www.tek-tips.com/faqs.cfm?fid=5655
-        Static frmTitle As String = Text
+    Private Sub lstErrors_SelectedIndexChanged(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles lstErrors.SelectedIndexChanged
+        'Do this only if we have errors listed
+        If lstErrors.SelectedItems.Count > 0 Then
+            Dim ln As Integer = Int32.Parse(lstErrors.SelectedItems(0).SubItems(4).Text) - 1
+            currDoc.[Interface].[GoTo].Line(ln)
+            currDoc.[Interface].Lines.Current.[Select]()
 
-        Dim proc As Process = Process.GetCurrentProcess
-        Text = frmTitle & " - " & (proc.WorkingSet64 / 1024).ToString("0,000") & " K"
-
+            ttipErrorHelp.SetToolTip(lstErrors, ErrorParser.GetErrorHelp(currDoc.Errors(lstErrors.SelectedItems(0))))
+            ttipErrorHelp.Show(ErrorParser.GetErrorHelp(currDoc.Errors(lstErrors.SelectedItems(0))), Me, lstErrors.Location.X, lstErrors.Location.Y)
+        End If
     End Sub
 End Class
 

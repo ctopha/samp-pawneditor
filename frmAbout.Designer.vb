@@ -30,7 +30,7 @@ Partial Class frmAbout
         Me.Label1.AutoSize = True
         Me.Label1.Location = New System.Drawing.Point(0, 0)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(213, 26)
+        Me.Label1.Size = New System.Drawing.Size(212, 26)
         Me.Label1.TabIndex = 0
         Me.Label1.Text = "http://www.famfamfam.com/lab/icons/silk/" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "chesssetpieces.com"
         '
@@ -40,6 +40,7 @@ Partial Class frmAbout
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(284, 262)
         Me.Controls.Add(Me.Label1)
+        Me.Font = New System.Drawing.Font("Tahoma", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Name = "frmAbout"
         Me.Text = "frmAbout"
         Me.ResumeLayout(False)
