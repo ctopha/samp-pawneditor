@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="cmenuTab.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>715, 17</value>
+  </metadata>
   <metadata name="statusStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
@@ -186,21 +189,6 @@
         atPWb1xNnyRxjz3OfwGqJelsVPCJ7AAAAABJRU5ErkJggg==
 </value>
   </data>
-  <data name="KeyboardShortcutsToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29m
-        dHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAINSURBVDhPrVNdb9JgGO2FP8C/5S+ZHwkXXuiFWUw0
-        C8aYTJxzcczNbYjbiB1YpINVYHyMljEoUKDlGyphgrDFxUkWzLHvm9hg4g2ZFycnbZ5znvect2UAMFfB
-        lcRksWmgadqMoigXmUzmVBTFTjgcVnmej7Isu+BwOGbtdrvFZrPdsFqt1yZPbBrIsjySJGkUiURmpolk
-        GsRisV+CIHg5jrs+lcFBfawbgM+/D9bDIVi5xL46Al+4AJc7B5s+w440gCPew1q4i2VBxyLfxPzHGp6y
-        ms4Qsdo+NVFqDVFsDqE0hsjVBshWvyFd7iOl9pAs9ZAonCCe7yKS7eLxVgGmwXg8hpD6AsK81KLsjjYo
-        bwerlNf3NMpn5z8RTHcwu5EFE6pe0o2BIx17UhvewyY8sQY+ROrYCVXhFMrY8GtY9ZWwzBWRLH6lJmT+
-        /ps0GJJXqQ/oSwLWEBJ2ChXKqz6V8pK7YM6QZ5/Ywt3XSTA+5QdkI+dutA5XqIb3nyvYDGhY41WseItY
-        8hTwks1j3pXFsy0ZT5wZzG0eg4s3YVlMgPHI32lBxNURKP+15c+pJvnResrs5/aLOBjX0RAiaVY5QTTX
-        xYHcoQUJKR3+pG4U2sanRItuJN24DewaMUnUm89jYIz77f/jfjG3XcTDd3k8eCvj3soxzWt5JeLOwiFu
-        GUIiNtD/fz/TNJ/v5Oxv5SY1UU5GRwkAAAAASUVORK5CYII=
-</value>
-  </data>
   <data name="AboutToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29m
@@ -228,8 +216,8 @@
   <metadata name="dlgSaveFile.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>602, 17</value>
   </metadata>
-  <metadata name="cmenuTab.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>715, 17</value>
+  <metadata name="tmrMem.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>823, 17</value>
   </metadata>
   <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>43</value>
