@@ -43,7 +43,6 @@ Module Module1
             Return True
         End Function
 
-#Region "Scintilla Initialization stuff"
         Public Function InitSC(ByVal InitialText As String) As ScintillaNet.Scintilla
             Dim scintilla As New ScintillaNet.Scintilla()
 
@@ -63,7 +62,8 @@ Module Module1
                 .Lexing.StreamCommentPrefix = ""
                 .Lexing.StreamCommentSufix = ""
                 .Location = New System.Drawing.Point(0, 0)
-                .Margins.Margin0.Width = 30
+                .Margins.Margin0.Width = 50
+                .Margins.Margin1.Width = 10
                 .Margins.Margin2.Width = 15
                 .Text = InitialText
                 .Scrolling.HorizontalWidth = 480
@@ -88,7 +88,6 @@ Module Module1
 
             Return scintilla
         End Function
-#End Region
     End Class
 
 End Module

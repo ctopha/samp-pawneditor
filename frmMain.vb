@@ -19,68 +19,95 @@ Public Class frmMain
     Const FILE_OPEN As Integer = 4
     Const APP_TITLE As String = "SA-MP Pawn Editor"
 
-    Private Sub GetIncludedFiles()
+    Private Function GetIncludedFiles() As Boolean
         tviewFilesIncluded.Nodes.Clear()
+        Dim hasIncludes As Boolean = False
 
         For Each line As ScintillaNet.Line In currDoc.Interface.Lines
             'If this line is an include
             If line.Text.ToString.Contains("#include") = True Then
                 'If the line contains an '"' char
                 If line.Text.ToString.Contains(Chr(34)) = True Then
-                    'Uncollapse the panel to see the included files
-                    If SplitContainer3.Panel2Collapsed = True Then
-                        SplitContainer3.Panel2Collapsed = False
-                    End If
+                    hasIncludes = True
 
                     'Populate the treeview
-                    Dim include As String() = line.Text.Split(Chr(34)) 'Split the include line with '"'
+                    Dim includeLine As String() = line.Text.Split(Chr(34)) 'Split the include line with '"'
                     Dim dir As String = System.IO.Path.GetDirectoryName(currDoc.FilePath)
-                    Dim includeStr As String = include(1).ToString() 'Get the text between the '"'
+                    Dim includeName As String = includeLine(1).ToString() 'Get the text between the '"'
 
                     'Check if the include is inside a folder
-                    Dim includePathSplit As String() = include(1).ToString.Split(Chr(47)) 'Split by '/'
+                    Dim includePathSplit As String() = includeLine(1).ToString.Split(Chr(47)) 'Split by '/'
 
                     'If it is inside a folder, create a new node with the folder's name
                     If includePathSplit.Length > 1 Then
-                        'Check if that folder node already exists
                         Dim includeFolder As String = includePathSplit(0).ToString
-                        Dim arrNodes As TreeNode() = tviewFilesIncluded.Nodes.Find(includeFolder, True)
+                        Dim includeNameStripped As String = includePathSplit(1).ToString
+                        Dim includeFolderNode As TreeNode() = tviewFilesIncluded.Nodes.Find(includeFolder, True)
 
-                        For i = 0 To arrNodes.Length - 1
-                            tviewFilesIncluded.SelectedNode = arrNodes(i)
-                            tviewFilesIncluded.SelectedNode.BackColor = Color.Red
-                        Next
+                        'Check if that folder node already exists. And if it does, create subnodes on it
+                        If includeFolderNode.Length > 0 Then
+                            With includeFolderNode(0).Nodes.Add(includeNameStripped)
+                                .Tag = includeName
+                                .Name = includeNameStripped
+                                .ImageIndex = 1
+                                .SelectedImageIndex = 1
+                            End With
 
-
-                        If arrNodes.Length > 0 Then
 
                         Else 'If not, create it
-                            tviewFilesIncluded.Nodes.Add(includeFolder)
+                            With tviewFilesIncluded.Nodes.Add(includeFolder)
+                                .Name = includeFolder
+                                .ImageIndex = 0
+                                .SelectedImageIndex = 0
+                                With .Nodes.Add(includeNameStripped)
+                                    .Tag = includeName
+                                    .Name = includeNameStripped
+                                    .ImageIndex = 1
+                                    .SelectedImageIndex = 1
+                                End With
+                            End With
+
                         End If
 
-
                     Else 'It's not inside a folder then add it just to the first node of them all
-                        tviewFilesIncluded.Nodes.Add(includeStr)
+                        With tviewFilesIncluded.Nodes.Add(includeName)
+                            .Tag = includeName
+                            .Name = includeName
+                            .ImageIndex = 1
+                            .SelectedImageIndex = 1
+                        End With
+
                     End If
                 End If
             End If
         Next
-    End Sub
+        Return hasIncludes
+    End Function
 
     Private Sub LoadPrerequisites()
         prs = New Parser()
-        Dim il As New ImageList()
-        il.Images.Add(My.Resources.VSProject_genericfile)
-        il.Images.Add(My.Resources.VSObject_Method)
-        il.Images.Add(My.Resources.VSObject_Constant)
-        il.Images.Add(My.Resources.VSObject_Field)
-        treeIncludes.ImageList = il
-        treeCurrFile.ImageList = il
-        il = New ImageList()
-        il.Images.Add(My.Resources._Error)
-        il.Images.Add(My.Resources.Warning)
-        lstErrors.SmallImageList = il
-        FindIncludeFunc()
+        Dim iLst As New ImageList()
+
+        'Load Function images
+        iLst.Images.Add(My.Resources.VSProject_genericfile)
+        iLst.Images.Add(My.Resources.VSObject_Method)
+        iLst.Images.Add(My.Resources.VSObject_Constant)
+        iLst.Images.Add(My.Resources.VSObject_Field)
+        treeIncludes.ImageList = iLst
+        treeCurrFile.ImageList = iLst
+
+        'Load error listing images
+        iLst = New ImageList()
+        iLst.Images.Add(My.Resources._Error)
+        iLst.Images.Add(My.Resources.Warning)
+        lstErrors.SmallImageList = iLst
+
+        'Load images for script includes
+        iLst = New ImageList()
+        iLst.Images.Add(My.Resources.folder)
+        iLst.Images.Add(My.Resources.script_code_red)
+        tviewFilesIncluded.ImageList = iLst
+
     End Sub
 
     Private Sub FindIncludeFunc()
@@ -503,9 +530,11 @@ Public Class frmMain
     Private Sub frmMain_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
         If CheckupOK() = True Then
             LoadPrerequisites()
+            FindIncludeFunc()
             dlgScintillaFont.Font = My.Settings.font
-            tstripIncludeHelp.Text = Nothing
-            'SplitContainer3.Panel2Collapsed = True
+            tsstripHints.Text = Nothing
+            SplitContainer3.Panel2Collapsed = True
+            SplitContainer1.Panel2Collapsed = True
 
             If My.Application.CommandLineArgs.Count > 0 Then 'If the application starts from an associated file type then load the according file
                 Dim filePathAndName As String = My.Application.CommandLineArgs.Item(0).ToString
@@ -545,11 +574,18 @@ Public Class frmMain
         numNewDocs += 1
     End Sub
 
-    Private Sub OpenFile(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripOpen.Click, OpenToolStripMenuItem.Click, OpenToolStripMenuItem1.Click
+    Private Sub OpenFile(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripOpen.Click, OpenToolStripMenuItem.Click
         If dlgOpenFile.ShowDialog() = DialogResult.OK Then
             For i As Integer = 0 To dlgOpenFile.FileNames.Length - 1
-                NewScintillaInstance(FILE_OPEN, dlgOpenFile.SafeFileNames(i), dlgOpenFile.FileNames(i))
-                GetIncludedFiles()
+                'Be safe and check if the file(s) are still in place
+                If My.Computer.FileSystem.FileExists(dlgOpenFile.FileNames(i)) Then
+                    NewScintillaInstance(FILE_OPEN, dlgOpenFile.SafeFileNames(i), dlgOpenFile.FileNames(i))
+                    GetIncludedFiles()
+                    tabcontrolOpenFiles_SelectedIndexChanged(sender, e)
+                Else
+                    MsgBox("Sorry, but I couldn't locate this file: " & dlgOpenFile.FileNames(i) & vbNewLine & vbNewLine & _
+                           "Maybe try to open it again...", MsgBoxStyle.Critical, APP_TITLE)
+                End If
             Next
         End If
     End Sub
@@ -652,12 +688,12 @@ Public Class frmMain
                 .StartInfo.FileName = My.Settings.cpath
                 .StartInfo.Arguments = My.Settings.cargs + " """ + currDoc.FilePath & """"
                 txtCompilerOutput.Text += vbCr & vbLf & "=== BEGIN OUTPUT FOR " + currDoc.FileName & " ===" & vbCr & vbLf
-                tstripIncludeHelp.Text = "Trying to compile! Please wait for the program to finish."
+                Text = "Trying to compile! Please wait for the program to finish."
                 .Start()
                 output = .StandardOutput.ReadToEnd()
                 err = .StandardError.ReadToEnd()
                 .WaitForExit()
-                tstripIncludeHelp.Text = Nothing
+                Text = APP_TITLE
                 .Close()
             End With
 
@@ -668,6 +704,7 @@ Public Class frmMain
 
             If err <> Nothing Then
                 SaveErrors(err)
+                SplitContainer1.Panel2Collapsed = False
             End If
 
             If Not lstErrors.Items.ContainsKey(CInt(ErrorType.[Error]).ToString()) Then
@@ -694,11 +731,17 @@ Public Class frmMain
             MsgBox("pawn.ico is missing! Put it back to its place!", MsgBoxStyle.Critical, APP_TITLE)
         Else
             If MsgBox("Are you running this program as Administrator?" & vbNewLine & vbNewLine & _
-                      "Note: This program needs to be run as Administrator in order to apply file association.", MsgBoxStyle.Question, APP_TITLE) _
+                      "Note: This program needs to be run as Administrator in order to apply file association.", MsgBoxStyle.YesNo, APP_TITLE) _
                       = MsgBoxResult.Yes Then
                 Dim Assoc As New Associations.AF_FileAssociator(".pwn")
-                Assoc.Create("SA-MP Pawn Editor", "PAWN Source Code", New Associations.ProgramIcon(Environment.CurrentDirectory + "/pawn.ico"), New Associations.ExecApplication(Application.ExecutablePath), New Associations.OpenWithList(New String() {"SA-MP Pawn Editor"}))
-                MsgBox(".pwn files should now be associated with this program.", MsgBoxStyle.Information, APP_TITLE)
+                Try
+                    Assoc.Create("SA-MP Pawn Editor", "PAWN Source Code", New Associations.ProgramIcon(Environment.CurrentDirectory + "/pawn.ico"), New Associations.ExecApplication(Application.ExecutablePath), New Associations.OpenWithList(New String() {"SA-MP Pawn Editor"}))
+                Catch ex As Exception
+                    MsgBox("Oops, something went wrong: " & ex.Message.ToString, MsgBoxStyle.Critical, APP_TITLE)
+                Finally
+                    MsgBox(".pwn files should now be associated with this program.", MsgBoxStyle.Information, APP_TITLE)
+                End Try
+
             End If
         End If
     End Sub
@@ -722,15 +765,15 @@ Public Class frmMain
         End If
     End Sub
 
-    Private Sub treeIncludes_NodeMouseHover(ByVal sender As Object, ByVal e As System.Windows.Forms.TreeNodeMouseHoverEventArgs)
+    Private Sub treeIncludes_NodeMouseHover(ByVal sender As Object, ByVal e As System.Windows.Forms.TreeNodeMouseHoverEventArgs) Handles treeIncludes.NodeMouseHover
         If e.Node.Parent IsNot Nothing AndAlso e.Node.ImageIndex = 1 Then
             Dim cftemp As c_function = prs.SearchForFunc(e.Node.Text)
-            tstripIncludeHelp.Text = cftemp.fReturn + ":" + cftemp.fName & "(" & String.Join(",", cftemp.fParams) & ")"
+            tsstripHints.Text = cftemp.fReturn + ":" + cftemp.fName & "(" & String.Join(",", cftemp.fParams) & ")"
         End If
     End Sub
 
-    Private Sub treeIncludes_NodeMouseDoubleClick(ByVal sender As Object, ByVal e As System.Windows.Forms.TreeNodeMouseClickEventArgs)
-        If e.Node.Parent IsNot Nothing AndAlso e.Node.ImageIndex = 1 Then
+    Private Sub treeIncludes_NodeMouseDoubleClick(ByVal sender As Object, ByVal e As System.Windows.Forms.TreeNodeMouseClickEventArgs) Handles treeIncludes.NodeMouseDoubleClick
+        If e.Node.Parent IsNot Nothing AndAlso e.Node.ImageIndex = 1 And tabcontrolOpenFiles.SelectedIndex <> -1 Then
             currDoc.[Interface].InsertText(e.Node.Text)
         End If
     End Sub
@@ -783,19 +826,30 @@ Public Class frmMain
             treeCurrFile.Nodes.Clear()
             lstErrors.Items.Clear()
 
-            GetIncludedFiles()
+            If GetIncludedFiles() = False Then
+                SplitContainer3.Panel2Collapsed = True
+            Else
+                SplitContainer3.Panel2Collapsed = False
+            End If
 
             FindLocalFunc(currDoc.[Interface].Text, False)
             For Each fileerr As [Error] In currDoc.Errors.Values
                 LoadErrorsIntoList(fileerr)
             Next
+
+            'If there are no errors to display then collapse the panel
+            If lstErrors.Items.Count > 0 Then
+                SplitContainer1.Panel2Collapsed = False
+            Else
+                SplitContainer1.Panel2Collapsed = True
+            End If
         End If
         DiscChanger()
     End Sub
 
     Private Sub lstErrors_SelectedIndexChanged(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles lstErrors.SelectedIndexChanged
         'Do this only if we have errors listed
-        If lstErrors.SelectedItems.Count > 0 Then
+        If lstErrors.Items.Count > 0 Then
             Dim ln As Integer = Int32.Parse(lstErrors.SelectedItems(0).SubItems(4).Text) - 1
             currDoc.[Interface].[GoTo].Line(ln)
             currDoc.[Interface].Lines.Current.[Select]()
@@ -803,6 +857,17 @@ Public Class frmMain
             ttipErrorHelp.SetToolTip(lstErrors, ErrorParser.GetErrorHelp(currDoc.Errors(lstErrors.SelectedItems(0))))
             ttipErrorHelp.Show(ErrorParser.GetErrorHelp(currDoc.Errors(lstErrors.SelectedItems(0))), Me, lstErrors.Location.X, lstErrors.Location.Y)
         End If
+    End Sub
+
+    Private Sub tviewFilesIncluded_NodeMouseDoubleClick(ByVal sender As Object, ByVal e As System.Windows.Forms.TreeNodeMouseClickEventArgs) Handles tviewFilesIncluded.NodeMouseDoubleClick
+        If e.Node.Tag IsNot Nothing Then
+            Dim includePath As String = System.IO.Path.GetDirectoryName(currDoc.FilePath)
+            NewScintillaInstance(FILE_OPEN, e.Node.Name, includePath & "/" & e.Node.Tag)
+        End If
+    End Sub
+
+    Private Sub AboutToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles AboutToolStripMenuItem.Click
+        frmAbout.ShowDialog()
     End Sub
 End Class
 

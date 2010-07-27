@@ -173,6 +173,7 @@ Partial Class frmBuildOptions
         Me.MaximizeBox = False
         Me.MinimizeBox = False
         Me.Name = "frmBuildOptions"
+        Me.ShowInTaskbar = False
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
         Me.Text = "Build Options"
         Me.gb_afl.ResumeLayout(False)
