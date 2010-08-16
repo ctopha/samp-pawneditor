@@ -2,7 +2,12 @@
 Imports System.IO
 Imports System.Windows.Forms
 Imports System.Diagnostics
-Imports newPT
+Imports PawnHandler.CodeParser
+Imports PawnHandler.ErrorParser
+
+'
+'Thanks to developerfusion.com for their code converting tool. Without it, this VB.NET application wouldn't have been created. - ViRuXe
+'
 
 Public Class frmMain
     Friend prs As Parser
@@ -19,9 +24,13 @@ Public Class frmMain
     Const FILE_OPEN As Integer = 4
     Const APP_TITLE As String = "SA-MP Pawn Editor"
 
-    Private Function GetIncludedFiles() As Boolean
-        tviewFilesIncluded.Nodes.Clear()
+    ''' <summary>
+    ''' Finds all definitions (#define) that point to script related files and returns a value if any are found or not. Example: #define "config.cfg"
+    ''' 
+    ''' </summary>
+    Private Function FindIncludedFilesInScript() As Boolean
         Dim hasIncludes As Boolean = False
+        tviewFilesIncluded.Nodes.Clear()
 
         For Each line As ScintillaNet.Line In currDoc.Interface.Lines
             'If this line is an include
@@ -81,9 +90,14 @@ Public Class frmMain
                 End If
             End If
         Next
+
+        'currDoc.hasIncludes = hasIncludes
         Return hasIncludes
     End Function
 
+    ''' <summary>
+    ''' Basicly, just loads necessary images onto treeview components
+    ''' </summary>
     Private Sub LoadPrerequisites()
         prs = New Parser()
         Dim iLst As New ImageList()
@@ -110,27 +124,33 @@ Public Class frmMain
 
     End Sub
 
-    Private Sub FindIncludeFunc()
-        Dim includesDir As New DirectoryInfo(Application.StartupPath + "\include")
-        If includesDir.Exists = False Then
+    ''' <summary>
+    ''' Finds all functions within an Include file
+    ''' </summary>
+    Private Sub GetIncludeFunctions()
+        Dim dirIncludes As New DirectoryInfo(Application.StartupPath + "\include")
+        If dirIncludes.Exists = False Then
             Try
-                includesDir.Create()
+                dirIncludes.Create()
             Catch generatedExceptionName As IOException
-                MessageBox.Show("Please create an 'include' folder in " & includesDir.Name, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                MessageBox.Show("Please create an 'include' folder in " & dirIncludes.Name, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Return
             End Try
         End If
-        prs.incarry = New c_FileFnc(includesDir.GetFiles("*.inc").Length - 1) {}
+        prs.incarry = New c_FileFnc(dirIncludes.GetFiles("*.inc").Length - 1) {}
 
-        For Each include As FileInfo In includesDir.GetFiles("*.inc")
+        For Each include As FileInfo In dirIncludes.GetFiles("*.inc")
             Dim sr As New StreamReader(include.FullName)
             prs.CodeParser(include.Name, sr.ReadToEnd(), True, My.Settings.fd)
         Next
         treeIncludes.Nodes.Clear()
 
+        'Need to rewrite this
         For Each fifnc As c_FileFnc In prs.incarry
             Dim tnca As TreeNode() = New TreeNode(fifnc.functions.Count + (fifnc.constants.Count - 1)) {}
             Dim b As Integer = 0, c As Integer = 0
+
+
             For Each cfs As c_function In fifnc.constants.Values
                 tnca(b) = New TreeNode(cfs.fName)
                 tnca(b).ImageIndex = 2
@@ -145,6 +165,7 @@ Public Class frmMain
                 tnca(fifnc.constants.Count + c).SelectedImageIndex = 1
                 c += 1
             Next
+
             Array.Sort(tnca, Function(tn1 As TreeNode, tn2 As TreeNode) tn1.Text.CompareTo(tn2.Text))
             Dim tn As New TreeNode(fifnc.FileName, tnca)
             tn.ImageIndex = 0
@@ -152,47 +173,68 @@ Public Class frmMain
         Next
     End Sub
 
-    Private Sub FindLocalFunc(ByVal cd As String, ByVal refresh As Boolean)
-        If currDoc.lv Is Nothing OrElse refresh = True Then
-            prs.CodeParser("null", cd, False, My.Settings.fd)
+    ''' <summary>
+    ''' Finds all functions within a specified file
+    ''' </summary>
+    ''' <param name="fileCode">A string variable that contains the file code</param>
+    ''' <param name="refreshingList">Boolean if you are refreshing the list or find for the first time</param>
+    Private Sub GetFileFunctions(ByVal fileCode As String, ByVal refreshingList As Boolean)
+        Dim numFunctions As Integer
+
+        If currDoc.lv Is Nothing OrElse refreshingList = True Then
+            prs.CodeParser("null", fileCode, False, My.Settings.fd)
             currDoc.lv = prs.curFile
         Else
             prs.curFile = currDoc.lv
         End If
 
         treeCurrFile.Nodes.Clear()
+        With treeCurrFile.Nodes.Add("Functions")
+            For Each fnc As c_function In currDoc.lv.functions.Values
+                Dim tn As New TreeNode(fnc.fName)
+                tn.ImageIndex = 1
+                tn.SelectedImageIndex = 1
+                .Nodes.Add(tn)
+                numFunctions += 1
+            Next
+        End With
 
-        For Each fnc As c_function In currDoc.lv.functions.Values
-            Dim tn As New TreeNode(fnc.fName)
-            tn.ImageIndex = 1
-            tn.SelectedImageIndex = 1
-            treeCurrFile.Nodes.Add(tn)
-        Next
+        With treeCurrFile.Nodes.Add("Constants")
+            For Each fnc As c_function In currDoc.lv.constants.Values
+                Dim tn As New TreeNode(fnc.fName)
+                tn.ImageIndex = 2
+                tn.SelectedImageIndex = 2
+                .Nodes.Add(tn)
+                numFunctions += 1
+            Next
+        End With
 
-        For Each fnc As c_function In currDoc.lv.constants.Values
-            Dim tn As New TreeNode(fnc.fName)
-            tn.ImageIndex = 2
-            tn.SelectedImageIndex = 2
-            treeCurrFile.Nodes.Add(tn)
-        Next
-
-        For Each fnc As c_function In currDoc.lv.variables.Values
-            Dim tn As New TreeNode(fnc.fName)
-            tn.ImageIndex = 3
-            tn.SelectedImageIndex = 3
-            treeCurrFile.Nodes.Add(tn)
-        Next
+        With treeCurrFile.Nodes.Add("Variables")
+            For Each fnc As c_function In currDoc.lv.variables.Values
+                Dim tn As New TreeNode(fnc.fName)
+                tn.ImageIndex = 3
+                tn.SelectedImageIndex = 3
+                .Nodes.Add(tn)
+                numFunctions += 1
+            Next
+        End With
         treeCurrFile.Sort()
+
+        If numFunctions <> 0 Then
+            tabFileFunctions.Text = "File Functions (" & numFunctions & ")"
+        Else
+            tabFileFunctions.Text = "File Functions"
+        End If
     End Sub
 
     ''' <summary>
     ''' Creates a new code tab window thingy.
     ''' </summary>
     ''' <param name="type">Either "new" or "open", no excuses</param>
-    ''' <param name="FileName">The safe file name or null, if new</param>
-    ''' <param name="FilePath">The FilePath or null, if new</param>
-    Public Sub NewScintillaInstance(ByVal type As String, ByVal FileName As String, ByVal FilePath As String)
-        Dim tb As TabPage = New TabPage(FileName)
+    ''' <param name="fileName">The safe file name or null, if new</param>
+    ''' <param name="filePath">The FilePath or null, if new</param>
+    Public Sub NewScintillaInstance(ByVal type As String, ByVal fileName As String, ByVal filePath As String)
+        Dim tb As TabPage = New TabPage(fileName)
         Dim pgsc As New ScintillaNet.Scintilla()
 
         Select Case type
@@ -203,7 +245,7 @@ Public Class frmMain
             Case 3 'NEW
                 pgsc = func.InitSC(Nothing)
             Case 4 'OPEN
-                Dim sr As New StreamReader(FilePath)
+                Dim sr As New StreamReader(filePath)
                 pgsc = func.InitSC(sr.ReadToEnd())
                 sr.Close()
             Case Else 'Something went wrong. Be safe, open just a new tab and display an error message
@@ -220,10 +262,16 @@ Public Class frmMain
         tb.Controls.Add(pgsc)
         tabcontrolOpenFiles.TabPages.Add(tb)
 
-        currDoc = New CodeDocument(pgsc, FileName, FilePath)
+        currDoc = New CodeDocument(pgsc, fileName, filePath)
         CodeTabs.Add(tabcontrolOpenFiles.TabPages(tabcontrolOpenFiles.TabPages.Count - 1), currDoc)
         tabcontrolOpenFiles.SelectedIndex = tabcontrolOpenFiles.TabPages.Count - 1
         DiscChanger()
+
+        If FindIncludedFilesInScript() = False Then
+            SplitContainer3.Panel2Collapsed = True
+        Else
+            SplitContainer3.Panel2Collapsed = False
+        End If
     End Sub
 
     Private Sub DestroyScintillaInstance(ByVal inst As TabPage)
@@ -259,6 +307,10 @@ Public Class frmMain
         cd.IsEdited = False
     End Sub
 
+    ''' <summary>
+    ''' Manages operation related buttons and menuitems
+    ''' </summary>
+    ''' <param name="bool">Boolean if you want to enable some operation related buttons and menuitems</param>
     Private Sub EnableOperations(ByVal bool As Boolean)
         toolstripClose.Enabled = bool
         CloseToolStripMenuItem.Enabled = bool
@@ -342,11 +394,20 @@ Public Class frmMain
 
         'If the document has more than one line, we enable compile, find and gotoline operations
         If currDoc.Interface.Lines.Count > 1 Then
-            toolstripCompile.Enabled = True
-            CompileToolStripMenuItem.Enabled = True
+            'Check file extension if compilable
+            If tabcontrolOpenFiles.SelectedTab.Text.Contains(".pwn") Then
+                toolstripCompile.Enabled = True
+                CompileToolStripMenuItem.Enabled = True
 
-            toolstripCompileRun.Enabled = True
-            CompileAndRunToolStripMenuItem.Enabled = True
+                toolstripCompileRun.Enabled = True
+                CompileAndRunToolStripMenuItem.Enabled = True
+            Else
+                toolstripCompile.Enabled = False
+                CompileToolStripMenuItem.Enabled = False
+
+                toolstripCompileRun.Enabled = False
+                CompileAndRunToolStripMenuItem.Enabled = False
+            End If
 
             toolstripFind.Enabled = True
             FindToolStripMenuItem.Enabled = True
@@ -356,11 +417,14 @@ Public Class frmMain
 
             GoToLineToolStripMenuItem.Enabled = True
         Else
-            toolstripCompile.Enabled = False
-            CompileToolStripMenuItem.Enabled = False
+            'Check file extension if compilable
+            If Not tabcontrolOpenFiles.SelectedTab.Text.Contains(".pwn") Then
+                toolstripCompile.Enabled = False
+                CompileToolStripMenuItem.Enabled = False
 
-            toolstripCompileRun.Enabled = False
-            CompileAndRunToolStripMenuItem.Enabled = False
+                toolstripCompileRun.Enabled = False
+                CompileAndRunToolStripMenuItem.Enabled = False
+            End If
 
             toolstripFind.Enabled = False
             FindToolStripMenuItem.Enabled = False
@@ -385,12 +449,25 @@ Public Class frmMain
         terr = terr.Trim()
         Dim errors As String() = terr.Split(ControlChars.Lf)
         For Each [error] As String In errors
-            Dim err_elems As [Error] = newPT.ErrorParser.ParseCompilerError([error])
+            Dim err_elems As [Error] = ErrorParser.ParseCompilerError([error])
+
+            Dim filePath As String = currDoc.FilePath, appPath As String = Application.StartupPath
+            Dim fileStr As String = String.Empty
+
+            'If err_elems.FilePath.Contains(appPath) Then
+            '    fileStr = err_elems.FilePath.Substring(appPath.Length + 1)
+            'Else
+            '    fileStr = err_elems.FilePath.Substring(filePath.Length + 1)
+            'End If
+
+            'err_elems.FilePath = fileStr
             currDoc.Errors.Add(LoadErrorsIntoList(err_elems), err_elems)
         Next
     End Sub
 
-
+    ''' <summary>
+    ''' Populates the ListView with the errors given from the pawn compiler
+    ''' </summary>
     Public Function LoadErrorsIntoList(ByVal err As [Error]) As ListViewItem
         Dim lvsi_err As ListViewItem.ListViewSubItem() = New ListViewItem.ListViewSubItem(4) {}
         lvsi_err(0) = New ListViewItem.ListViewSubItem()
@@ -400,8 +477,8 @@ Public Class frmMain
             lvsi_err(i) = New ListViewItem.ListViewSubItem()
         Next
         lvsi_err(1).Text = err.ID.ToString()
-        lvsi_err(2).Text = err.Description
-        lvsi_err(3).Text = currDoc.FileName
+        lvsi_err(2).Text = err.Description.ToString
+        lvsi_err(3).Text = err.FilePath
         lvsi_err(4).Text = err.Line.ToString()
         currDoc.[Interface].Lines(err.Line - 1).Range.SetIndicator(0)
         Dim lvi_err As New ListViewItem(lvsi_err, CInt(err.Type))
@@ -493,12 +570,19 @@ Public Class frmMain
     End Sub
 
     Private Function CheckupOK()
-        Dim essFiles As String() = {"pawncc.exe", "pawnc.dll", "libpawnc.dll", "ScintillaNet.dll", "newPT.dll", "cpp.xml"}
+        Dim essFiles As String() = { _
+        "pawncc.exe", _
+        "pawnc.dll", _
+        "libpawnc.dll", _
+        "ScintillaNet.dll", _
+        "PawnHandler.dll", _
+        "cpp.xml" _
+        }
 
         For file As Integer = 0 To essFiles.Length - 1
             If My.Computer.FileSystem.FileExists(Application.StartupPath & "\" & essFiles(file)) = False Then
                 MsgBox("Oops, something went wrong! Be sure to have these files in the same folder as this program, before you start it:" & vbNewLine & vbNewLine & _
-                       "'pawncc.exe', 'pawnc.dll', 'libpawnc.dll', 'ScintillaNet.dll', 'cpp.xml' and 'newPT.dll'." & vbNewLine & vbNewLine & _
+                       "'" & essFiles(0) & "', '" & essFiles(0) & "', '" & essFiles(0) & "', '" & essFiles(0) & "', '" & essFiles(0) & "' and '" & essFiles(0) & "'." & vbNewLine & vbNewLine & _
                        "Program will now shutdown.", MsgBoxStyle.Critical, APP_TITLE)
                 Return False
             End If
@@ -530,13 +614,14 @@ Public Class frmMain
     Private Sub frmMain_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
         If CheckupOK() = True Then
             LoadPrerequisites()
-            FindIncludeFunc()
+            GetIncludeFunctions()
             dlgScintillaFont.Font = My.Settings.font
             tsstripHints.Text = Nothing
-            SplitContainer3.Panel2Collapsed = True
-            SplitContainer1.Panel2Collapsed = True
+            SplitContainer3.Panel2Collapsed = True 'Includings panel
+            SplitContainer1.Panel2Collapsed = True 'Error panel
 
-            If My.Application.CommandLineArgs.Count > 0 Then 'If the application starts from an associated file type then load the according file
+            'If the application starts from an associated file type then load the according file
+            If My.Application.CommandLineArgs.Count > 0 Then
                 Dim filePathAndName As String = My.Application.CommandLineArgs.Item(0).ToString
                 Dim fileName As String = System.IO.Path.GetFileName(filePathAndName)
 
@@ -580,7 +665,6 @@ Public Class frmMain
                 'Be safe and check if the file(s) are still in place
                 If My.Computer.FileSystem.FileExists(dlgOpenFile.FileNames(i)) Then
                     NewScintillaInstance(FILE_OPEN, dlgOpenFile.SafeFileNames(i), dlgOpenFile.FileNames(i))
-                    GetIncludedFiles()
                     tabcontrolOpenFiles_SelectedIndexChanged(sender, e)
                 Else
                     MsgBox("Sorry, but I couldn't locate this file: " & dlgOpenFile.FileNames(i) & vbNewLine & vbNewLine & _
@@ -617,7 +701,7 @@ Public Class frmMain
 
     End Sub
 
-    Private Sub CloseDoc(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripClose.Click, CloseToolStripMenuItem.Click
+    Private Sub CloseDoc(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripClose.Click, CloseToolStripMenuItem.Click, CloseToolStripMenuItem1.Click
         Dim selectedTab As Integer = tabcontrolOpenFiles.SelectedIndex
 
         Dim sel_cd As CodeDocument = CodeTabs(tabcontrolOpenFiles.TabPages(selectedTab))
@@ -675,25 +759,28 @@ Public Class frmMain
     Private Sub Compile(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles toolstripCompile.Click, CompileToolStripMenuItem.Click
         SaveFile(sender, e) 'Save current file before compiling it
 
-        'Only compile it if the file has already been saved
+        'Only compile if the file has already been saved
         If currDoc.FilePath IsNot Nothing Then
             Dim pCompiler As New System.Diagnostics.Process()
             Dim output As String, err As String
 
             With pCompiler
-                .StartInfo.UseShellExecute = False
-                .StartInfo.RedirectStandardOutput = True
-                .StartInfo.RedirectStandardError = True
-                .StartInfo.CreateNoWindow = True
-                .StartInfo.FileName = My.Settings.cpath
-                .StartInfo.Arguments = My.Settings.cargs + " """ + currDoc.FilePath & """"
+                With .StartInfo
+                    .UseShellExecute = False
+                    .RedirectStandardOutput = True
+                    .RedirectStandardError = True
+                    .CreateNoWindow = True
+                    .FileName = My.Settings.cpath
+                    .Arguments = My.Settings.cargs + " """ + currDoc.FilePath & """"
+                End With
+
                 txtCompilerOutput.Text += vbCr & vbLf & "=== BEGIN OUTPUT FOR " + currDoc.FileName & " ===" & vbCr & vbLf
                 Text = "Trying to compile! Please wait for the program to finish."
                 .Start()
                 output = .StandardOutput.ReadToEnd()
                 err = .StandardError.ReadToEnd()
                 .WaitForExit()
-                Text = APP_TITLE
+                Text = APP_TITLE 'Reset program title
                 .Close()
             End With
 
@@ -705,24 +792,25 @@ Public Class frmMain
             If err <> Nothing Then
                 SaveErrors(err)
                 SplitContainer1.Panel2Collapsed = False
+                SplitContainer1.SplitterDistance = SplitContainer1.Size.Height / 100 * 73
             End If
 
-            If Not lstErrors.Items.ContainsKey(CInt(ErrorType.[Error]).ToString()) Then
-                Dim fi As New FileInfo(Path.GetFileNameWithoutExtension(currDoc.FileName) + ".amx")
-                If My.Settings.afl = "pwn" Then
-                    Try
-                        fi.MoveTo(currDoc.FilePath)
-                    Catch ex As Exception
-                        MessageBox.Show("Could not move resulting amx file! Reason: " + ex.Message.ToString(), "Error!", MessageBoxButtons.OK, MessageBoxIcon.[Error])
-                    End Try
-                ElseIf My.Settings.afl = "custom" And My.Settings.aflcustom <> "" Then
-                    Try
-                        fi.MoveTo(My.Settings.aflcustom)
-                    Catch ex As Exception
-                        MessageBox.Show("Could not move resulting amx file! Reason: " + ex.Message.ToString(), "Error!", MessageBoxButtons.OK, MessageBoxIcon.[Error])
-                    End Try
-                End If
-            End If
+            'If Not lstErrors.Items.ContainsKey(CInt(ErrorType.[Error]).ToString()) Then
+            '    Dim fi As New FileInfo(Path.GetFileNameWithoutExtension(currDoc.FileName) + ".amx")
+            '    If My.Settings.afl = "pwn" Then
+            '        Try
+            '            fi.MoveTo(currDoc.FilePath)
+            '        Catch ex As Exception
+            '            MessageBox.Show("Could not move resulting amx file! Reason: " + ex.Message.ToString(), "Error!", MessageBoxButtons.OK, MessageBoxIcon.[Error])
+            '        End Try
+            '    ElseIf My.Settings.afl = "custom" And My.Settings.aflcustom <> "" Then
+            '        Try
+            '            fi.MoveTo(My.Settings.aflcustom)
+            '        Catch ex As Exception
+            '            MessageBox.Show("Could not move resulting amx file! Reason: " + ex.Message.ToString(), "Error!", MessageBoxButtons.OK, MessageBoxIcon.[Error])
+            '        End Try
+            '    End If
+            'End If
         End If
     End Sub
 
@@ -826,13 +914,14 @@ Public Class frmMain
             treeCurrFile.Nodes.Clear()
             lstErrors.Items.Clear()
 
-            If GetIncludedFiles() = False Then
+            If FindIncludedFilesInScript() = False Then
                 SplitContainer3.Panel2Collapsed = True
             Else
                 SplitContainer3.Panel2Collapsed = False
             End If
 
-            FindLocalFunc(currDoc.[Interface].Text, False)
+            GetFileFunctions(currDoc.[Interface].Text, False)
+
             For Each fileerr As [Error] In currDoc.Errors.Values
                 LoadErrorsIntoList(fileerr)
             Next
@@ -849,13 +938,16 @@ Public Class frmMain
 
     Private Sub lstErrors_SelectedIndexChanged(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles lstErrors.SelectedIndexChanged
         'Do this only if we have errors listed
+
+        '- Verificar se o ficheiro seleccionado está aberto
+        '- Se nao estiver, abre com ajuda do .tag no treeview
+        '- Se já estiver aberto, passar para essa tab e fazer highlight na linha
         If lstErrors.Items.Count > 0 Then
-            Dim ln As Integer = Int32.Parse(lstErrors.SelectedItems(0).SubItems(4).Text) - 1
-            currDoc.[Interface].[GoTo].Line(ln)
+            Dim lineNum As Integer = Int32.Parse(lstErrors.SelectedItems(0).SubItems(4).Text.ToString)
+            currDoc.[Interface].[GoTo].Line(lineNum)
             currDoc.[Interface].Lines.Current.[Select]()
 
-            ttipErrorHelp.SetToolTip(lstErrors, ErrorParser.GetErrorHelp(currDoc.Errors(lstErrors.SelectedItems(0))))
-            ttipErrorHelp.Show(ErrorParser.GetErrorHelp(currDoc.Errors(lstErrors.SelectedItems(0))), Me, lstErrors.Location.X, lstErrors.Location.Y)
+            ttipErrorHelp.Show(ErrorParser.GetErrorHelp(currDoc.Errors(lstErrors.SelectedItems(0))), Me, MousePosition.X + 4, MousePosition.Y + 4)
         End If
     End Sub
 
@@ -868,6 +960,48 @@ Public Class frmMain
 
     Private Sub AboutToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles AboutToolStripMenuItem.Click
         frmAbout.ShowDialog()
+    End Sub
+
+    Private Sub txtIncludesSearch_GotFocus(ByVal sender As Object, ByVal e As System.EventArgs) Handles txtIncludesSearch.GotFocus
+        txtIncludesSearch.SelectAll()
+    End Sub
+
+    Private Sub txtIncludesSearch_KeyDown(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyEventArgs) Handles txtIncludesSearch.KeyDown
+        If e.KeyCode = Keys.Enter Then
+            Dim text As String = txtIncludesSearch.Text.ToString
+            If text <> String.Empty Then
+                Dim nodes As Integer = treeIncludes.Nodes.Count
+                treeIncludes.CollapseAll()
+
+                'Search the subnodes
+                For i = 0 To nodes - 1
+                    Dim subNodes As Integer = treeIncludes.Nodes.Item(i).Nodes.Count
+
+                    For iNode = 0 To subNodes - 1
+                        treeIncludes.Nodes.Item(i).Nodes.Item(iNode).BackColor = Color.White
+
+                        If treeIncludes.Nodes.Item(i).Nodes.Item(iNode).Text.Contains(text) Then
+                            If treeIncludes.Nodes.Item(i).IsExpanded = False Then treeIncludes.Nodes.Item(i).Expand()
+
+                            treeIncludes.SelectedNode = treeIncludes.Nodes.Item(i).Nodes.Item(iNode)
+                            treeIncludes.SelectedNode.BackColor = Color.Silver
+                        End If
+                    Next
+                Next
+            End If
+        End If
+    End Sub
+
+    Private Sub SplitContainer1_DoubleClick(ByVal sender As Object, ByVal e As System.EventArgs) Handles SplitContainer1.DoubleClick
+        Static hidden As Boolean
+
+        If hidden = False Then
+            SplitContainer1.SplitterDistance = SplitContainer1.Size.Height - SplitContainer1.Panel2MinSize
+            hidden = True
+        Else
+            SplitContainer1.SplitterDistance = SplitContainer1.Size.Height / 100 * 73
+            hidden = False
+        End If
     End Sub
 End Class
 

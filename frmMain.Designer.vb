@@ -114,9 +114,13 @@ Partial Class frmMain
         Me.SplitContainer3 = New System.Windows.Forms.SplitContainer
         Me.TabControl2 = New System.Windows.Forms.TabControl
         Me.tabIncludes = New System.Windows.Forms.TabPage
+        Me.TableLayoutPanel1 = New System.Windows.Forms.TableLayoutPanel
         Me.treeIncludes = New System.Windows.Forms.TreeView
-        Me.tabCurrFile = New System.Windows.Forms.TabPage
+        Me.txtIncludesSearch = New System.Windows.Forms.TextBox
+        Me.tabFileFunctions = New System.Windows.Forms.TabPage
+        Me.TableLayoutPanel2 = New System.Windows.Forms.TableLayoutPanel
         Me.treeCurrFile = New System.Windows.Forms.TreeView
+        Me.txtFileSearch = New System.Windows.Forms.TextBox
         Me.tviewFilesIncluded = New System.Windows.Forms.TreeView
         Me.FileToolStripMenuItem1 = New System.Windows.Forms.ToolStripMenuItem
         Me.EditToolStripMenuItem1 = New System.Windows.Forms.ToolStripMenuItem
@@ -139,7 +143,9 @@ Partial Class frmMain
         Me.SplitContainer3.SuspendLayout()
         Me.TabControl2.SuspendLayout()
         Me.tabIncludes.SuspendLayout()
-        Me.tabCurrFile.SuspendLayout()
+        Me.TableLayoutPanel1.SuspendLayout()
+        Me.tabFileFunctions.SuspendLayout()
+        Me.TableLayoutPanel2.SuspendLayout()
         Me.SuspendLayout()
         '
         'cmTab
@@ -642,7 +648,7 @@ Partial Class frmMain
         Me.CompileToolStripMenuItem.Enabled = False
         Me.CompileToolStripMenuItem.Image = Global.SA_MP_Pawn_Editor.My.Resources.Resources.application_lightning
         Me.CompileToolStripMenuItem.Name = "CompileToolStripMenuItem"
-        Me.CompileToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F4
+        Me.CompileToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F5
         Me.CompileToolStripMenuItem.Size = New System.Drawing.Size(198, 22)
         Me.CompileToolStripMenuItem.Text = "Compile"
         '
@@ -651,7 +657,7 @@ Partial Class frmMain
         Me.CompileAndRunToolStripMenuItem.Enabled = False
         Me.CompileAndRunToolStripMenuItem.Image = Global.SA_MP_Pawn_Editor.My.Resources.Resources.application_xp_terminal
         Me.CompileAndRunToolStripMenuItem.Name = "CompileAndRunToolStripMenuItem"
-        Me.CompileAndRunToolStripMenuItem.ShortcutKeys = CType((System.Windows.Forms.Keys.Control Or System.Windows.Forms.Keys.F4), System.Windows.Forms.Keys)
+        Me.CompileAndRunToolStripMenuItem.ShortcutKeys = CType((System.Windows.Forms.Keys.Control Or System.Windows.Forms.Keys.F5), System.Windows.Forms.Keys)
         Me.CompileAndRunToolStripMenuItem.Size = New System.Drawing.Size(198, 22)
         Me.CompileAndRunToolStripMenuItem.Text = "Compile and Run"
         '
@@ -699,7 +705,7 @@ Partial Class frmMain
         '
         Me.AboutToolStripMenuItem.Image = CType(resources.GetObject("AboutToolStripMenuItem.Image"), System.Drawing.Image)
         Me.AboutToolStripMenuItem.Name = "AboutToolStripMenuItem"
-        Me.AboutToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.AboutToolStripMenuItem.Size = New System.Drawing.Size(103, 22)
         Me.AboutToolStripMenuItem.Text = "About"
         '
         'dlgOpenFile
@@ -729,12 +735,13 @@ Partial Class frmMain
         'SplitContainer1.Panel1
         '
         Me.SplitContainer1.Panel1.Controls.Add(Me.tabcontrolOpenFiles)
+        Me.SplitContainer1.Panel1MinSize = 435
         '
         'SplitContainer1.Panel2
         '
         Me.SplitContainer1.Panel2.Controls.Add(Me.TabControl3)
-        Me.SplitContainer1.Size = New System.Drawing.Size(653, 588)
-        Me.SplitContainer1.SplitterDistance = 423
+        Me.SplitContainer1.Size = New System.Drawing.Size(624, 588)
+        Me.SplitContainer1.SplitterDistance = 435
         Me.SplitContainer1.TabIndex = 5
         '
         'tabcontrolOpenFiles
@@ -746,7 +753,7 @@ Partial Class frmMain
         Me.tabcontrolOpenFiles.Location = New System.Drawing.Point(0, 0)
         Me.tabcontrolOpenFiles.Name = "tabcontrolOpenFiles"
         Me.tabcontrolOpenFiles.SelectedIndex = 0
-        Me.tabcontrolOpenFiles.Size = New System.Drawing.Size(653, 423)
+        Me.tabcontrolOpenFiles.Size = New System.Drawing.Size(624, 435)
         Me.tabcontrolOpenFiles.TabIndex = 0
         '
         'TabControl3
@@ -757,7 +764,7 @@ Partial Class frmMain
         Me.TabControl3.Location = New System.Drawing.Point(0, 0)
         Me.TabControl3.Name = "TabControl3"
         Me.TabControl3.SelectedIndex = 0
-        Me.TabControl3.Size = New System.Drawing.Size(653, 161)
+        Me.TabControl3.Size = New System.Drawing.Size(624, 149)
         Me.TabControl3.TabIndex = 4
         '
         'tabErrors
@@ -766,7 +773,7 @@ Partial Class frmMain
         Me.tabErrors.Location = New System.Drawing.Point(4, 22)
         Me.tabErrors.Name = "tabErrors"
         Me.tabErrors.Padding = New System.Windows.Forms.Padding(3)
-        Me.tabErrors.Size = New System.Drawing.Size(645, 135)
+        Me.tabErrors.Size = New System.Drawing.Size(616, 123)
         Me.tabErrors.TabIndex = 0
         Me.tabErrors.Text = "Error Output"
         Me.tabErrors.UseVisualStyleBackColor = True
@@ -780,7 +787,7 @@ Partial Class frmMain
         Me.lstErrors.Location = New System.Drawing.Point(3, 3)
         Me.lstErrors.MultiSelect = False
         Me.lstErrors.Name = "lstErrors"
-        Me.lstErrors.Size = New System.Drawing.Size(639, 129)
+        Me.lstErrors.Size = New System.Drawing.Size(610, 117)
         Me.lstErrors.TabIndex = 0
         Me.lstErrors.UseCompatibleStateImageBehavior = False
         Me.lstErrors.View = System.Windows.Forms.View.Details
@@ -815,7 +822,7 @@ Partial Class frmMain
         Me.tabOutput.Location = New System.Drawing.Point(4, 22)
         Me.tabOutput.Name = "tabOutput"
         Me.tabOutput.Padding = New System.Windows.Forms.Padding(3)
-        Me.tabOutput.Size = New System.Drawing.Size(645, 135)
+        Me.tabOutput.Size = New System.Drawing.Size(616, 122)
         Me.tabOutput.TabIndex = 1
         Me.tabOutput.Text = "Misc Output"
         Me.tabOutput.UseVisualStyleBackColor = True
@@ -829,7 +836,7 @@ Partial Class frmMain
         Me.txtCompilerOutput.Multiline = True
         Me.txtCompilerOutput.Name = "txtCompilerOutput"
         Me.txtCompilerOutput.ReadOnly = True
-        Me.txtCompilerOutput.Size = New System.Drawing.Size(639, 129)
+        Me.txtCompilerOutput.Size = New System.Drawing.Size(610, 116)
         Me.txtCompilerOutput.TabIndex = 0
         '
         'SplitContainer2
@@ -849,7 +856,7 @@ Partial Class frmMain
         Me.SplitContainer2.Panel2.Controls.Add(Me.SplitContainer3)
         Me.SplitContainer2.Panel2MinSize = 100
         Me.SplitContainer2.Size = New System.Drawing.Size(828, 588)
-        Me.SplitContainer2.SplitterDistance = 653
+        Me.SplitContainer2.SplitterDistance = 624
         Me.SplitContainer2.TabIndex = 6
         '
         'SplitContainer3
@@ -866,65 +873,113 @@ Partial Class frmMain
         'SplitContainer3.Panel2
         '
         Me.SplitContainer3.Panel2.Controls.Add(Me.tviewFilesIncluded)
-        Me.SplitContainer3.Size = New System.Drawing.Size(171, 588)
+        Me.SplitContainer3.Size = New System.Drawing.Size(200, 588)
         Me.SplitContainer3.SplitterDistance = 391
         Me.SplitContainer3.TabIndex = 0
         '
         'TabControl2
         '
         Me.TabControl2.Controls.Add(Me.tabIncludes)
-        Me.TabControl2.Controls.Add(Me.tabCurrFile)
+        Me.TabControl2.Controls.Add(Me.tabFileFunctions)
         Me.TabControl2.Dock = System.Windows.Forms.DockStyle.Fill
         Me.TabControl2.Location = New System.Drawing.Point(0, 0)
         Me.TabControl2.Name = "TabControl2"
         Me.TabControl2.SelectedIndex = 0
-        Me.TabControl2.Size = New System.Drawing.Size(171, 391)
+        Me.TabControl2.Size = New System.Drawing.Size(200, 391)
         Me.TabControl2.TabIndex = 2
         '
         'tabIncludes
         '
-        Me.tabIncludes.Controls.Add(Me.treeIncludes)
+        Me.tabIncludes.Controls.Add(Me.TableLayoutPanel1)
         Me.tabIncludes.Location = New System.Drawing.Point(4, 22)
         Me.tabIncludes.Name = "tabIncludes"
         Me.tabIncludes.Padding = New System.Windows.Forms.Padding(3)
-        Me.tabIncludes.Size = New System.Drawing.Size(163, 365)
+        Me.tabIncludes.Size = New System.Drawing.Size(192, 365)
         Me.tabIncludes.TabIndex = 0
         Me.tabIncludes.Text = "Includes"
         Me.tabIncludes.UseVisualStyleBackColor = True
         '
+        'TableLayoutPanel1
+        '
+        Me.TableLayoutPanel1.ColumnCount = 1
+        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100.0!))
+        Me.TableLayoutPanel1.Controls.Add(Me.treeIncludes, 0, 1)
+        Me.TableLayoutPanel1.Controls.Add(Me.txtIncludesSearch, 0, 0)
+        Me.TableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.TableLayoutPanel1.Location = New System.Drawing.Point(3, 3)
+        Me.TableLayoutPanel1.Name = "TableLayoutPanel1"
+        Me.TableLayoutPanel1.RowCount = 2
+        Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle)
+        Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle)
+        Me.TableLayoutPanel1.Size = New System.Drawing.Size(186, 359)
+        Me.TableLayoutPanel1.TabIndex = 7
+        '
         'treeIncludes
         '
         Me.treeIncludes.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.treeIncludes.Location = New System.Drawing.Point(3, 3)
+        Me.treeIncludes.Location = New System.Drawing.Point(3, 30)
         Me.treeIncludes.Name = "treeIncludes"
-        Me.treeIncludes.Size = New System.Drawing.Size(157, 359)
-        Me.treeIncludes.TabIndex = 0
+        Me.treeIncludes.Size = New System.Drawing.Size(180, 359)
+        Me.treeIncludes.TabIndex = 1
         '
-        'tabCurrFile
+        'txtIncludesSearch
         '
-        Me.tabCurrFile.Controls.Add(Me.treeCurrFile)
-        Me.tabCurrFile.Location = New System.Drawing.Point(4, 22)
-        Me.tabCurrFile.Name = "tabCurrFile"
-        Me.tabCurrFile.Padding = New System.Windows.Forms.Padding(3)
-        Me.tabCurrFile.Size = New System.Drawing.Size(163, 365)
-        Me.tabCurrFile.TabIndex = 1
-        Me.tabCurrFile.Text = "Current File"
-        Me.tabCurrFile.UseVisualStyleBackColor = True
+        Me.txtIncludesSearch.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+        Me.txtIncludesSearch.Dock = System.Windows.Forms.DockStyle.Top
+        Me.txtIncludesSearch.Location = New System.Drawing.Point(3, 3)
+        Me.txtIncludesSearch.Name = "txtIncludesSearch"
+        Me.txtIncludesSearch.Size = New System.Drawing.Size(180, 21)
+        Me.txtIncludesSearch.TabIndex = 0
+        '
+        'tabFileFunctions
+        '
+        Me.tabFileFunctions.Controls.Add(Me.TableLayoutPanel2)
+        Me.tabFileFunctions.Location = New System.Drawing.Point(4, 22)
+        Me.tabFileFunctions.Name = "tabFileFunctions"
+        Me.tabFileFunctions.Padding = New System.Windows.Forms.Padding(3)
+        Me.tabFileFunctions.Size = New System.Drawing.Size(192, 365)
+        Me.tabFileFunctions.TabIndex = 1
+        Me.tabFileFunctions.Text = "File Functions"
+        Me.tabFileFunctions.UseVisualStyleBackColor = True
+        '
+        'TableLayoutPanel2
+        '
+        Me.TableLayoutPanel2.ColumnCount = 1
+        Me.TableLayoutPanel2.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100.0!))
+        Me.TableLayoutPanel2.Controls.Add(Me.treeCurrFile, 0, 1)
+        Me.TableLayoutPanel2.Controls.Add(Me.txtFileSearch, 0, 0)
+        Me.TableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.TableLayoutPanel2.Location = New System.Drawing.Point(3, 3)
+        Me.TableLayoutPanel2.Name = "TableLayoutPanel2"
+        Me.TableLayoutPanel2.RowCount = 2
+        Me.TableLayoutPanel2.RowStyles.Add(New System.Windows.Forms.RowStyle)
+        Me.TableLayoutPanel2.RowStyles.Add(New System.Windows.Forms.RowStyle)
+        Me.TableLayoutPanel2.Size = New System.Drawing.Size(186, 359)
+        Me.TableLayoutPanel2.TabIndex = 0
         '
         'treeCurrFile
         '
         Me.treeCurrFile.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.treeCurrFile.Location = New System.Drawing.Point(3, 3)
+        Me.treeCurrFile.Location = New System.Drawing.Point(3, 30)
         Me.treeCurrFile.Name = "treeCurrFile"
-        Me.treeCurrFile.Size = New System.Drawing.Size(157, 359)
-        Me.treeCurrFile.TabIndex = 0
+        Me.treeCurrFile.Size = New System.Drawing.Size(180, 359)
+        Me.treeCurrFile.TabIndex = 1
+        '
+        'txtFileSearch
+        '
+        Me.txtFileSearch.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+        Me.txtFileSearch.Dock = System.Windows.Forms.DockStyle.Top
+        Me.txtFileSearch.Location = New System.Drawing.Point(3, 3)
+        Me.txtFileSearch.Name = "txtFileSearch"
+        Me.txtFileSearch.Size = New System.Drawing.Size(180, 21)
+        Me.txtFileSearch.TabIndex = 0
         '
         'tviewFilesIncluded
         '
         Me.tviewFilesIncluded.Dock = System.Windows.Forms.DockStyle.Fill
         Me.tviewFilesIncluded.Location = New System.Drawing.Point(0, 0)
         Me.tviewFilesIncluded.Name = "tviewFilesIncluded"
-        Me.tviewFilesIncluded.Size = New System.Drawing.Size(171, 193)
+        Me.tviewFilesIncluded.Size = New System.Drawing.Size(200, 193)
         Me.tviewFilesIncluded.TabIndex = 0
         '
         'FileToolStripMenuItem1
@@ -984,7 +1039,11 @@ Partial Class frmMain
         Me.SplitContainer3.ResumeLayout(False)
         Me.TabControl2.ResumeLayout(False)
         Me.tabIncludes.ResumeLayout(False)
-        Me.tabCurrFile.ResumeLayout(False)
+        Me.TableLayoutPanel1.ResumeLayout(False)
+        Me.TableLayoutPanel1.PerformLayout()
+        Me.tabFileFunctions.ResumeLayout(False)
+        Me.TableLayoutPanel2.ResumeLayout(False)
+        Me.TableLayoutPanel2.PerformLayout()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -1077,14 +1136,18 @@ Partial Class frmMain
     Friend WithEvents SplitContainer3 As System.Windows.Forms.SplitContainer
     Friend WithEvents TabControl2 As System.Windows.Forms.TabControl
     Friend WithEvents tabIncludes As System.Windows.Forms.TabPage
-    Friend WithEvents treeIncludes As System.Windows.Forms.TreeView
-    Friend WithEvents tabCurrFile As System.Windows.Forms.TabPage
-    Friend WithEvents treeCurrFile As System.Windows.Forms.TreeView
+    Friend WithEvents tabFileFunctions As System.Windows.Forms.TabPage
     Friend WithEvents tviewFilesIncluded As System.Windows.Forms.TreeView
     Friend WithEvents ToolStripButton1 As System.Windows.Forms.ToolStripButton
     Friend WithEvents FileToolStripMenuItem1 As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents EditToolStripMenuItem1 As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents OpenToolStripMenuItem1 As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents tsstripHints As System.Windows.Forms.ToolStripStatusLabel
+    Friend WithEvents treeIncludes As System.Windows.Forms.TreeView
+    Friend WithEvents TableLayoutPanel2 As System.Windows.Forms.TableLayoutPanel
+    Friend WithEvents treeCurrFile As System.Windows.Forms.TreeView
+    Friend WithEvents txtFileSearch As System.Windows.Forms.TextBox
+    Friend WithEvents TableLayoutPanel1 As System.Windows.Forms.TableLayoutPanel
+    Friend WithEvents txtIncludesSearch As System.Windows.Forms.TextBox
 
 End Class
