@@ -2,17 +2,32 @@
 Imports System.Drawing
 Imports System.IO
 Imports System.Reflection
-Imports System.Windows.Forms
-Imports newPT
+Imports PawnHandler.CodeParser
+Imports PawnHandler.ErrorParser
 
 Module Module1
+    'Public Class ChangeLanguage
+    '    Public Const ENGLISH As Integer = 0, PORTUGUESE As Integer = 1
+
+    '    Public Sub Language(ByRef languageConst As Integer)
+
+    '        For Each frmControl As Control In frmMain.Controls
+    '            Select Case languageConst
+    '                Case ENGLISH
+    '                    frmControl.Text =
+    '                Case PORTUGUESE
+    '            End Select
+    '        Next
+    '    End Sub
+    'End Class
+
     Public Class CodeDocument
         Public FileName As String = String.Empty
         Public Errors As New Dictionary(Of ListViewItem, [Error])()
         Public [Interface] As ScintillaNet.Scintilla
         Public IsEdited As Boolean = False
-        Public Initial As Boolean = True
-        'Initial is there for a reason!
+        Public hasIncludes As Boolean = False
+        Public Initial As Boolean = True 'Initial is there for a reason!
         Public FilePath As String = String.Empty
         Public lv As c_FileFnc
 
@@ -24,7 +39,7 @@ Module Module1
     End Class
 
     ''' <summary>
-    ''' Functions used in f_main, mostly Scintilla stuff.
+    ''' Functions used in the main form (frmMain), mostly Scintilla stuff.
     ''' </summary>
     Public Class Functions
         Private lst As List(Of String), lite As List(Of String)
