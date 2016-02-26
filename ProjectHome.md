@@ -1,0 +1,1 @@
+A simple, yet usefull IDE for sa-mp pawn developers.
